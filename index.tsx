@@ -86,6 +86,12 @@ function selectGame(game: GameType) {
     document.getElementById('difficultySelection')?.style.setProperty('display', 'block');
 }
 
+function backToGameSelection() {
+    document.getElementById('difficultySelection')?.style.setProperty('display', 'none');
+    document.getElementById('gameSelection')?.style.setProperty('display', 'block');
+    selectedGame = null;
+}
+
 function startGame(diff: string) {
   difficulty = diff;
   playerScore = 0;
@@ -113,12 +119,6 @@ function backToMenu() {
   scoreToSave = 0;
   document.getElementById('gameSelection')!.style.display = 'block';
   document.getElementById('difficultySelection')!.style.display = 'none';
-}
-
-function quitGame() {
-    if (confirm('Willst du wirklich aufgeben?')) {
-        endGame(selectedGame!);
-    }
 }
 
 function endGame(gameType: GameType) {
@@ -806,9 +806,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('pauseBtn')?.addEventListener('click', pauseGame);
-    document.getElementById('quitBtn')?.addEventListener('click', quitGame);
     document.getElementById('nextRoundBtn')?.addEventListener('click', nextKlickerRound);
     document.getElementById('backToMenuBtn')?.addEventListener('click', backToMenu);
+    document.getElementById('backToGameSelectionBtn')?.addEventListener('click', backToGameSelection);
 
     document.getElementById('shuffleActionBtn')?.addEventListener('click', handleShuffleAction);
     

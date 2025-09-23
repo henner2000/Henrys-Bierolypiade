@@ -54,6 +54,8 @@ body::before {
   text-align: center;
   position: relative;
   z-index: 1;
+  max-height: 95svh;
+  overflow-y: auto;
 }
 
 h1 {
