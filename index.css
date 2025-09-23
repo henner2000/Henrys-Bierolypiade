@@ -92,15 +92,11 @@ h1 {
   position: relative;
 }
 
-.character.henry::before {
-  content: '🧔‍♂️';
-  font-size: clamp(60px, 12svh, 80px); /* Match emoji size to container */
-  line-height: clamp(80px, 15svh, 100px);
-  position: absolute;
-  top: 0; left: 0;
+.character.henry img {
   width: 100%;
   height: 100%;
-  display: block;
+  object-fit: cover;
+  border-radius: 50%;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
   animation: henry-bob 3s ease-in-out infinite;
 }
@@ -137,11 +133,8 @@ h1 {
 
 .game-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, 1fr);
   gap: clamp(4px, 1.5vw, 8px); /* Responsive gap */
   margin: clamp(10px, 2svh, 15px) auto; /* Reduced margin */
-  max-width: 380px; /* Adjusted for 4x4 grid */
   width: 100%; /* Make it take full width of parent */
   aspect-ratio: 1;
   padding: clamp(5px, 2vw, 10px); /* Responsive padding */
@@ -382,6 +375,47 @@ button:disabled {
 }
 
 /* --- KRUG-SCHIEBEN STYLES (MOBILE OPTIMIZED) --- */
+
+/* Specific adjustments for Shuffle Game Header to be more compact and stay in one line */
+#shuffleGameScreen .game-header {
+    padding: 4px 10px; /* Further reduced padding */
+    gap: 10px; /* Reduced gap */
+    flex-wrap: nowrap; /* Prevent wrapping */
+    align-items: center; /* Ensure vertical alignment */
+}
+
+#shuffleGameScreen .timer-display,
+#shuffleGameScreen .score-value {
+    font-size: 1em; /* Further reduced font size */
+}
+
+#shuffleGameScreen .score-display {
+    gap: 10px; /* Reduced space between scores */
+}
+
+#shuffleGameScreen .score-label {
+    font-size: 0.6em; /* Keep label small */
+}
+
+.turn-indicator {
+    padding: 8px 15px;
+    margin: 10px auto 5px;
+    border-radius: 20px;
+    font-family: 'Bungee', cursive;
+    font-size: 1.1em;
+    max-width: 250px;
+    color: white;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    transition: background-color 0.5s, transform 0.3s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.turn-indicator.player {
+    background-color: #667eea; /* A nice blue */
+}
+.turn-indicator.henry {
+    background-color: #e74c3c; /* A distinct red */
+}
+
 #shuffleHenryQuote {
     padding: 5px;
     font-size: clamp(0.7em, 2vw, 0.8em);
@@ -710,6 +744,11 @@ button:disabled {
     flex-direction: column;
     justify-content: center;
     gap: 15px;
+  }
+  /* Override for shuffle game header to keep it in a row */
+  #shuffleGameScreen .game-header {
+    flex-direction: row;
+    justify-content: space-between;
   }
 }
 

@@ -22,7 +22,7 @@ let playerScore = 0;
 let henryScore = 0;
 let totalPlayerScore = 0;
 let totalHenryScore = 0;
-let currentRound = 1;
+let currentRound = 1; // Used for Krug-Schieben
 let gameActive = false;
 let gamePaused = false;
 let difficulty = 'medium';
@@ -31,6 +31,7 @@ let highscoresData: Highscore[] = [];
 let scoreToSave = 0; // Temp score while waiting for name input
 
 // --- BIER-BLITZ STATE ---
+let bierBlitzRound = 1;
 let beerInterval: any = null;
 let henryInterval: any = null;
 let gameTimer: any = null;
@@ -42,7 +43,13 @@ let lastHitTime = 0;
 let activeBears = new Map();
 let hits = 0;
 let misses = 0;
-let isBonusRound = false;
+
+const bierBlitzRounds: { [key: number]: { gridSize: number, maxWidth: string } } = {
+    1: { gridSize: 2, maxWidth: '200px' },
+    2: { gridSize: 3, maxWidth: '300px' },
+    3: { gridSize: 4, maxWidth: '380px' }
+};
+
 
 // --- KRUG-SCHIEBEN STATE ---
 const SHUFFLE_MAX_ROUNDS = 5;
@@ -82,14 +89,7 @@ const highscoreScreen = document.getElementById('highscoreScreen');
 
 function selectGame(game: GameType) {
     selectedGame = game;
-    document.getElementById('gameSelection')?.style.setProperty('display', 'none');
-    document.getElementById('difficultySelection')?.style.setProperty('display', 'block');
-}
-
-function backToGameSelection() {
-    document.getElementById('difficultySelection')?.style.setProperty('display', 'none');
-    document.getElementById('gameSelection')?.style.setProperty('display', 'block');
-    selectedGame = null;
+    startGame('medium');
 }
 
 function startGame(diff: string) {
@@ -98,14 +98,15 @@ function startGame(diff: string) {
   henryScore = 0;
   totalPlayerScore = 0;
   totalHenryScore = 0;
-  currentRound = 1;
   gameActive = true;
   
   menuScreen?.classList.remove('active');
 
   if (selectedGame === GameType.BIER_BLITZ) {
+    bierBlitzRound = 1;
     startKlickerGame();
   } else if (selectedGame === GameType.SCHIEBEN) {
+    currentRound = 1;
     startShuffleGame();
   }
 }
@@ -118,7 +119,6 @@ function backToMenu() {
   (document.getElementById('playerNameInput') as HTMLInputElement).value = '';
   scoreToSave = 0;
   document.getElementById('gameSelection')!.style.display = 'block';
-  document.getElementById('difficultySelection')!.style.display = 'none';
 }
 
 function endGame(gameType: GameType) {
@@ -145,7 +145,18 @@ function endGame(gameType: GameType) {
     
     document.getElementById('finalPlayerScore')!.textContent = `${totalPlayerScore}`;
     document.getElementById('finalHenryScore')!.textContent = `${totalHenryScore}`;
-    document.getElementById('finalRound')!.textContent = `${currentRound}`;
+    
+    const finalRoundEl = document.getElementById('finalRound');
+    const finalRoundLabelEl = document.getElementById('finalRoundLabel');
+    if (finalRoundEl && finalRoundLabelEl) {
+        if (gameType === GameType.BIER_BLITZ) {
+            finalRoundEl.textContent = `${bierBlitzRound}`;
+            finalRoundLabelEl.textContent = 'Runden';
+        } else {
+            finalRoundEl.textContent = `${currentRound}`;
+            finalRoundLabelEl.textContent = 'Runden';
+        }
+    }
     
     const accuracyContainer = document.getElementById('finalAccuracyContainer');
     if(accuracyContainer) {
@@ -158,7 +169,7 @@ function endGame(gameType: GameType) {
         }
     }
     
-    document.getElementById('roundResult')!.textContent = `Endergebnis nach ${currentRound} Runden.`;
+    document.getElementById('roundResult')!.textContent = `Endergebnis nach ${gameType === GameType.BIER_BLITZ ? bierBlitzRound + ' Runden' : currentRound + ' Runden'}.`;
     
     const nextRoundBtn = document.getElementById('nextRoundBtn')!;
     const backToMenuBtn = document.getElementById('backToMenuBtn')!;
@@ -169,9 +180,6 @@ function endGame(gameType: GameType) {
         scoreToSave = finalScore;
         document.getElementById('newHighscore')!.style.display = 'block';
     } else {
-        if (gameType === GameType.BIER_BLITZ && currentRound < 5) {
-            nextRoundBtn.style.display = 'inline-block';
-        }
         backToMenuBtn.style.display = 'inline-block';
     }
 }
@@ -180,27 +188,26 @@ function endGame(gameType: GameType) {
 
 function startKlickerGame() {
   gamePaused = false;
-  combo = 0;
-  maxCombo = 0;
-  streak = 0;
   hits = 0;
   misses = 0;
-  timeLeft = difficultySettings[difficulty].roundTime;
   activeBears.clear();
-
   gameScreen?.classList.add('active');
-  
-  initGrid();
-  updateKlickerStats();
-  updateProgressBar();
   startKlickerRound();
 }
 
 function initGrid() {
   const grid: HTMLElement | null = document.getElementById('gameGrid');
   if (!grid) return;
+
+  const roundConfig = bierBlitzRounds[bierBlitzRound];
+  const gridSize = roundConfig.gridSize;
+
   grid.innerHTML = '';
-  for (let i = 0; i < 16; i++) {
+  grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+  grid.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
+  grid.style.maxWidth = roundConfig.maxWidth;
+
+  for (let i = 0; i < gridSize * gridSize; i++) {
     const cell = document.createElement('div');
     cell.className = 'grid-cell';
     cell.dataset.index = `${i}`;
@@ -215,16 +222,13 @@ function startKlickerRound() {
   timeLeft = difficultySettings[difficulty].roundTime;
   combo = 0;
   streak = 0;
-  hits = 0;
-  misses = 0;
+  maxCombo = 0; // Reset max combo per round
   gameActive = true;
   activeBears.clear();
 
-  isBonusRound = currentRound % 3 === 0;
-  const bonusIndicator = document.getElementById('bonusRoundIndicator');
-  if(bonusIndicator) bonusIndicator.style.display = isBonusRound ? 'block' : 'none';
-  if (isBonusRound) showAchievement('🔥 Bonus Runde!');
-
+  document.getElementById('bonusRoundIndicator')!.style.display = 'none';
+  
+  initGrid();
   updateKlickerStats();
   updateProgressBar();
 
@@ -273,14 +277,14 @@ function spawnBeer() {
   if (rand < settings.goldenChance) {
     beer.classList.add('golden');
     beer.textContent = '🍻';
-    beer.dataset.points = isBonusRound ? '10' : '5';
-  } else if (rand < settings.goldenChance + 0.05 && currentRound > 2) {
+    beer.dataset.points = '5';
+  } else if (rand < settings.goldenChance + 0.05 && bierBlitzRound > 1) { // Penalties only from round 2
     beer.classList.add('penalty');
     beer.textContent = '☠️';
     beer.dataset.points = '-3';
   } else {
     beer.textContent = '🍺';
-    beer.dataset.points = isBonusRound ? '2' : '1';
+    beer.dataset.points = '1';
   }
   cell.appendChild(beer);
 
@@ -359,7 +363,7 @@ function handleCellClick(index: number) {
 function henryTurn() {
   if (activeBears.size === 0) return;
   const settings = difficultySettings[difficulty];
-  const adjustedAccuracy = Math.min(settings.henryAccuracy + (currentRound * 0.02), 0.95);
+  const adjustedAccuracy = Math.min(settings.henryAccuracy + (bierBlitzRound * 0.03), 0.95);
 
   if (Math.random() < adjustedAccuracy) {
     const beersArray = Array.from(activeBears.values());
@@ -408,7 +412,7 @@ function updateKlickerStats() {
   
   document.getElementById('playerScore')!.textContent = `${playerScore}`;
   document.getElementById('henryScore')!.textContent = `${henryScore}`;
-  document.getElementById('roundNumber')!.textContent = `${currentRound}`;
+  document.getElementById('roundNumber')!.textContent = `${bierBlitzRound}`;
   document.getElementById('comboMax')!.textContent = `${maxCombo}`;
   document.getElementById('streak')!.textContent = `${streak}`;
   document.getElementById('accuracy')!.textContent = accuracy + '%';
@@ -427,35 +431,37 @@ function endKlickerRound() {
   
   const accuracy = hits + misses > 0 ? Math.round((hits / (hits + misses)) * 100) : 0;
 
-  document.getElementById('gameoverTitle')!.textContent = `Runde ${currentRound} beendet!`;
+  document.getElementById('gameoverTitle')!.textContent = `Runde ${bierBlitzRound} beendet!`;
   const quotes = won ? henryQuotes.roundLose : henryQuotes.roundWin;
   document.getElementById('finalQuote')!.textContent = quotes[Math.floor(Math.random() * quotes.length)];
   
   document.getElementById('finalPlayerScore')!.textContent = `${playerScore}`;
   document.getElementById('finalHenryScore')!.textContent = `${henryScore}`;
-  document.getElementById('finalRound')!.textContent = `${currentRound}`;
+  document.getElementById('finalRound')!.textContent = `${bierBlitzRound}`;
+  document.getElementById('finalRoundLabel')!.textContent = 'Runde';
   document.getElementById('finalAccuracy')!.textContent = accuracy + '%';
   document.getElementById('finalAccuracyContainer')!.style.display = 'block';
 
-
   const resultText = won
-    ? `✅ Du gewinnst Runde ${currentRound}! (+${playerScore - henryScore} Punkte Vorsprung)`
-    : `❌ Henry gewinnt Runde ${currentRound}! (${henryScore - playerScore} Punkte zurück)`;
+    ? `✅ Du gewinnst Runde ${bierBlitzRound}!`
+    : `❌ Henry gewinnt Runde ${bierBlitzRound}!`;
   document.getElementById('roundResult')!.textContent = resultText;
 
   const nextRoundBtn = document.getElementById('nextRoundBtn') as HTMLButtonElement;
   const backToMenuBtn = document.getElementById('backToMenuBtn') as HTMLButtonElement;
-  if (currentRound < 5) {
+  
+  if (bierBlitzRound < 3) {
+      nextRoundBtn.textContent = 'Nächste Runde';
       nextRoundBtn.style.display = 'inline-block';
+      backToMenuBtn.style.display = 'inline-block';
   } else {
       endGame(GameType.BIER_BLITZ);
-      return; // endGame will handle the buttons
+      // endGame will handle the button visibility
   }
-  backToMenuBtn.style.display = 'inline-block';
 }
 
 function nextKlickerRound() {
-  currentRound++;
+  bierBlitzRound++;
   gameoverScreen?.classList.remove('active');
   gameScreen?.classList.add('active');
   startKlickerRound();
@@ -480,6 +486,10 @@ function updateShuffleUI() {
 }
 
 function startShuffleTurn() {
+    const turnIndicator = document.getElementById('turnIndicator')!;
+    turnIndicator.textContent = 'Dein Zug 👤';
+    turnIndicator.className = 'turn-indicator player';
+
     shuffleState = 'power';
     const mug = document.querySelector('.shuffle-mug') as HTMLElement;
     mug.style.transition = 'none';
@@ -551,11 +561,17 @@ function animateMugSlide(power: number, angle: number, user: 'player' | 'henry')
 
     setTimeout(() => {
         const score = calculateShuffleScore(mug, table);
+        const turnIndicator = document.getElementById('turnIndicator')!;
+        
         if (user === 'player') {
             playerScore = score;
             totalPlayerScore += score;
             showScorePopup(mug, `+${score}`);
             document.getElementById('shuffleHenryQuote')!.textContent = score >= 50 ? henryQuotes.shuffleLose[Math.floor(Math.random() * henryQuotes.shuffleLose.length)] : "Mein Zug!";
+            
+            turnIndicator.textContent = 'Henrys Zug 🧔‍♂️';
+            turnIndicator.className = 'turn-indicator henry';
+            
             setTimeout(henrySlide, 2000);
         } else {
             henryScore = score;
@@ -607,240 +623,221 @@ function calculateShuffleScore(mug: HTMLElement, table: HTMLElement): number {
 
 
 function henrySlide() {
-    const powerSettings = difficultySettings[difficulty].shufflePower;
-    const henryPower = Math.random() * (powerSettings.max - powerSettings.min) + powerSettings.min;
-    
-    const angleError = difficultySettings[difficulty].shuffleAngleError;
-    const henryAngle = (Math.random() * 2 - 1) * angleError;
-
     const mug = document.querySelector('.shuffle-mug') as HTMLElement;
     mug.style.transition = 'none';
     mug.style.transform = 'translateX(-50%)';
 
+    const settings = difficultySettings[difficulty];
+    
+    // Henry's "thinking" - simulate power and angle
+    const powerMin = settings.shufflePower.min;
+    const powerMax = settings.shufflePower.max;
+    const henryPower = powerMin + Math.random() * (powerMax - powerMin);
+    
+    const angleError = settings.shuffleAngleError;
+    const henryAngle = (Math.random() - 0.5) * 2 * angleError;
+    
     setTimeout(() => {
-        animateMugSlide(henryPower, henryAngle, 'henry')
-    }, 500);
+        animateMugSlide(henryPower, henryAngle, 'henry');
+    }, 1000);
 }
 
 function endShuffleRound() {
-    if (currentRound >= SHUFFLE_MAX_ROUNDS) {
-        endGame(GameType.SCHIEBEN);
-    } else {
+    updateShuffleUI();
+    if (currentRound < SHUFFLE_MAX_ROUNDS) {
         currentRound++;
-        updateShuffleUI();
-        startShuffleTurn();
+        setTimeout(startShuffleTurn, 2000);
+    } else {
+        setTimeout(() => endGame(GameType.SCHIEBEN), 2000);
     }
 }
 
-// --- UI HELPERS ---
-
-function updateTimer() {
-  const timerDisplay = document.getElementById('timerDisplay');
-  const timeLeftEl = document.getElementById('timeLeft');
-  if (timeLeftEl) timeLeftEl.textContent = `${timeLeft}`;
-  if (!timerDisplay) return;
-  if (timeLeft <= 5) timerDisplay.className = 'timer-display danger';
-  else if (timeLeft <= 10) timerDisplay.className = 'timer-display warning';
-  else timerDisplay.className = 'timer-display';
+// --- UI HELPER FUNCTIONS ---
+function showCombo(combo: number) {
+  const indicator = document.createElement('div');
+  indicator.className = 'combo-indicator';
+  indicator.textContent = `Combo x${combo}!`;
+  document.body.appendChild(indicator);
+  setTimeout(() => indicator.remove(), 800);
 }
 
-function updateProgressBar() {
-  const percentage = (timeLeft / difficultySettings[difficulty].roundTime) * 100;
-  const progressBar = document.getElementById('progressBar');
-  if (!progressBar) return;
-  progressBar.style.width = percentage + '%';
-  if (timeLeft <= 5) progressBar.className = 'progress-fill danger';
-  else if (timeLeft <= 10) progressBar.className = 'progress-fill warning';
-  else progressBar.className = 'progress-fill';
-}
-
-function showCombo(comboCount: number) {
-  const combo = document.createElement('div');
-  combo.className = 'combo-indicator';
-  combo.textContent = `${comboCount}x COMBO!`;
-  document.body.appendChild(combo);
-  setTimeout(() => combo.remove(), 800);
-}
-
-function showAchievement(text: string) {
-  const achievement = document.createElement('div');
-  achievement.className = 'achievement-popup';
-  achievement.textContent = text;
-  document.body.appendChild(achievement);
-  setTimeout(() => achievement.remove(), 3000);
-}
-
-function showScorePopup(cell: HTMLElement, text: string, isHenry = false) {
+function showScorePopup(element: HTMLElement, text: string, isHenry = false) {
   const popup = document.createElement('div');
   popup.className = 'score-popup';
   popup.textContent = text;
   popup.style.color = isHenry ? '#e74c3c' : '#4CAF50';
-  const rect = cell.getBoundingClientRect();
-  popup.style.left = rect.left + rect.width / 2 + 'px';
-  popup.style.top = rect.top + 'px';
-  document.body.appendChild(popup);
+  
+  const rect = element.getBoundingClientRect();
+  const containerRect = document.querySelector('.game-container')!.getBoundingClientRect();
+  
+  popup.style.left = `${rect.left - containerRect.left + rect.width / 2}px`;
+  popup.style.top = `${rect.top - containerRect.top}px`;
+  
+  document.querySelector('.game-container')!.appendChild(popup);
   setTimeout(() => popup.remove(), 1000);
 }
 
+function showAchievement(text: string) {
+  const popup = document.createElement('div');
+  popup.className = 'achievement-popup';
+  popup.textContent = text;
+  document.body.appendChild(popup);
+  setTimeout(() => popup.remove(), 3000);
+}
 
-// --- HIGHSCORES ---
-
-function loadHighscoresFromStorage() {
-    const storedData = localStorage.getItem(HIGHSCORE_STORAGE_KEY);
-    if (storedData) {
-        highscoresData = JSON.parse(storedData);
+function updateTimer() {
+    const timerEl = document.getElementById('timeLeft');
+    const timerDisplay = document.getElementById('timerDisplay');
+    if (timerEl) timerEl.textContent = `${timeLeft}`;
+    if (timerDisplay) {
+        timerDisplay.classList.remove('warning', 'danger');
+        if (timeLeft <= 5) timerDisplay.classList.add('danger');
+        else if (timeLeft <= 10) timerDisplay.classList.add('warning');
     }
 }
 
-function saveHighscoresToStorage() {
-    localStorage.setItem(HIGHSCORE_STORAGE_KEY, JSON.stringify(highscoresData));
+function updateProgressBar() {
+  const bar = document.getElementById('progressBar');
+  if (!bar) return;
+  const totalTime = difficultySettings[difficulty].roundTime;
+  const percentage = (timeLeft / totalTime) * 100;
+  bar.style.width = `${percentage}%`;
+  bar.classList.remove('warning', 'danger');
+  if (percentage <= 20) bar.classList.add('danger');
+  else if (percentage <= 40) bar.classList.add('warning');
+}
+
+// --- HIGHSCORE LOGIC ---
+function loadHighscores() {
+  const data = localStorage.getItem(HIGHSCORE_STORAGE_KEY);
+  highscoresData = data ? JSON.parse(data) : [];
+}
+
+function saveHighscores() {
+  localStorage.setItem(HIGHSCORE_STORAGE_KEY, JSON.stringify(highscoresData));
 }
 
 function isNewHighscore(score: number): boolean {
-    if (!selectedGame || score === 0) return false;
-    
-    const highscoresForGame = highscoresData
-      .filter(h => h.game === selectedGame)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
+  if (score === 0) return false;
+  const gameHighscores = highscoresData.filter(hs => hs.game === selectedGame);
+  if (gameHighscores.length < 10) return true;
+  const lowestHighscore = gameHighscores.sort((a, b) => a.score - b.score)[0];
+  return score > lowestHighscore.score;
+}
+
+function addHighscore(name: string, score: number) {
+  const newHighscore: Highscore = {
+    name: name || 'Anonym',
+    score,
+    date: new Date().toLocaleDateString('de-DE'),
+    difficulty,
+    game: selectedGame!
+  };
+  highscoresData.push(newHighscore);
+  highscoresData.sort((a, b) => b.score - a.score);
   
-    // It's a highscore if the list isn't full OR the new score is better than the worst score
-    return highscoresForGame.length < 10 || score > highscoresForGame[highscoresForGame.length - 1]?.score;
-}
-
-function handleHighscoreSubmit() {
-    const nameInput = document.getElementById('playerNameInput') as HTMLInputElement;
-    let name = nameInput.value.trim();
-    if (name === '') {
-        name = 'Anonym';
+  const gameHighscores = highscoresData.filter(hs => hs.game === selectedGame);
+    if (gameHighscores.length > 10) {
+        const scoreToRemove = gameHighscores[10].score;
+        const nameToRemove = gameHighscores[10].name;
+        // Find the actual entry in the main array to remove
+        const indexToRemove = highscoresData.findIndex(hs => hs.game === selectedGame && hs.score === scoreToRemove && hs.name === nameToRemove);
+        if (indexToRemove > -1) {
+            highscoresData.splice(indexToRemove, 1);
+        }
     }
-
-    if (!selectedGame || scoreToSave === 0) return;
-
-    const date = new Date().toLocaleDateString('de-DE');
-    const newEntry: Highscore = { name, score: scoreToSave, date, difficulty, game: selectedGame };
     
-    highscoresData.push(newEntry);
-    saveHighscoresToStorage();
-
-    // Cleanup UI
-    document.getElementById('newHighscore')!.style.display = 'none';
-    nameInput.value = '';
-    scoreToSave = 0;
-
-    // Show the appropriate buttons now
-    const nextRoundBtn = document.getElementById('nextRoundBtn')!;
-    const backToMenuBtn = document.getElementById('backToMenuBtn')!;
-    
-    if (selectedGame === GameType.BIER_BLITZ && currentRound < 5) {
-        nextRoundBtn.style.display = 'inline-block';
-    }
-    backToMenuBtn.style.display = 'inline-block';
+  saveHighscores();
 }
 
-function escapeHTML(str: string) {
-    const p = document.createElement("p");
-    p.textContent = str;
-    return p.innerHTML;
-}
-
-function renderHighscoreScreen(game: GameType) {
+function displayHighscores(game: GameType) {
     const container = document.getElementById('highscoreTableContainer');
     if (!container) return;
 
-    const scores = highscoresData
-        .filter(h => h.game === game)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 10);
+    const filteredScores = highscoresData.filter(hs => hs.game === game).sort((a, b) => b.score - a.score);
 
-    if (scores.length === 0) {
-        container.innerHTML = `<p style="color: #999; font-style: italic; margin-top: 20px;">Noch keine Highscores für dieses Spiel!</p>`;
+    if (filteredScores.length === 0) {
+        container.innerHTML = '<p>Noch keine Highscores. Sei der Erste!</p>';
         return;
     }
 
-    const tableHeader = `
+    let html = `
         <div class="highscore-table">
-            <div class="highscore-header highscore-rank">Rang</div>
-            <div class="highscore-header highscore-name">Name</div>
+            <div class="highscore-header highscore-rank">#</div>
+            <div class="highscore-header">Name</div>
             <div class="highscore-header">Punkte</div>
             <div class="highscore-header">Modus</div>
-            <div class="highscore-header highscore-date">Datum</div>
+            <div class="highscore-header">Datum</div>
     `;
 
-    const tableRows = scores.map((entry, index) => {
-        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
-        return `
+    filteredScores.forEach((score, index) => {
+        const rank = index + 1;
+        let rankDisplay = `${rank}`;
+        if (rank === 1) rankDisplay = '🥇';
+        if (rank === 2) rankDisplay = '🥈';
+        if (rank === 3) rankDisplay = '🥉';
+
+        html += `
             <div class="highscore-row">
-                <div class="highscore-rank">${medal}</div>
-                <div class="highscore-name">${escapeHTML(entry.name)}</div>
-                <div class="highscore-score">${entry.score}</div>
+                <div class="highscore-rank">${rankDisplay}</div>
+                <div class="highscore-name">${score.name}</div>
+                <div class="highscore-score">${score.score}</div>
+                <!-- Wrapper for mobile layout -->
                 <div class="highscore-details-wrapper">
-                    <span class="highscore-difficulty">${entry.difficulty}</span>
-                    <span class="highscore-date">${entry.date}</span>
+                    <div class="highscore-difficulty">${score.difficulty}</div>
+                    <div class="highscore-date">${score.date}</div>
                 </div>
             </div>
         `;
-    }).join('');
-
-    container.innerHTML = tableHeader + tableRows + '</div>';
-}
-
-// --- INITIALIZATION ---
-document.addEventListener('DOMContentLoaded', () => {
-    loadHighscoresFromStorage();
-
-    document.querySelectorAll('.game-select-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const target = e.currentTarget as HTMLButtonElement;
-            const game = target.dataset.game as GameType;
-            if (game) {
-                selectGame(game);
-            }
-        });
     });
 
-    document.querySelectorAll('.difficulty-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const target = e.currentTarget as HTMLButtonElement;
-            const diff = target.dataset.difficulty;
-            if (diff) {
-                startGame(diff);
-            }
+    html += '</div>'; // close table
+    container.innerHTML = html;
+}
+
+// --- EVENT LISTENERS ---
+function setupEventListeners() {
+    document.querySelectorAll('.game-select-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const game = btn.getAttribute('data-game') as GameType;
+            selectGame(game);
         });
     });
 
     document.getElementById('pauseBtn')?.addEventListener('click', pauseGame);
     document.getElementById('nextRoundBtn')?.addEventListener('click', nextKlickerRound);
     document.getElementById('backToMenuBtn')?.addEventListener('click', backToMenu);
-    document.getElementById('backToGameSelectionBtn')?.addEventListener('click', backToGameSelection);
-
-    document.getElementById('shuffleActionBtn')?.addEventListener('click', handleShuffleAction);
     
-    document.getElementById('saveHighscoreBtn')?.addEventListener('click', handleHighscoreSubmit);
+    document.getElementById('shuffleActionBtn')?.addEventListener('click', handleShuffleAction);
 
-    // Highscore Screen Logic
     document.getElementById('showHighscoresBtn')?.addEventListener('click', () => {
         menuScreen?.classList.remove('active');
         highscoreScreen?.classList.add('active');
-        const klickerTab = document.querySelector('.highscore-tab[data-game="bier-blitz"]') as HTMLElement;
-        document.querySelectorAll('.highscore-tab').forEach(t => t.classList.remove('active'));
-        klickerTab.classList.add('active');
-        renderHighscoreScreen(GameType.BIER_BLITZ);
+        displayHighscores(GameType.BIER_BLITZ); // Default view
     });
 
     document.getElementById('backToMenuFromHighscoresBtn')?.addEventListener('click', backToMenu);
 
+    document.getElementById('saveHighscoreBtn')?.addEventListener('click', () => {
+        const name = (document.getElementById('playerNameInput') as HTMLInputElement).value;
+        if (name.trim() && scoreToSave > 0) {
+            addHighscore(name, scoreToSave);
+            scoreToSave = 0;
+            document.getElementById('newHighscore')!.style.display = 'none';
+            document.getElementById('backToMenuBtn')!.style.display = 'inline-block';
+        }
+    });
+    
     document.querySelectorAll('.highscore-tab').forEach(tab => {
-        tab.addEventListener('click', (e) => {
-            const target = e.currentTarget as HTMLButtonElement;
-            const game = target.dataset.game as GameType;
-
-            document.querySelectorAll('.highscore-tab').forEach(t => t.classList.remove('active'));
-            target.classList.add('active');
-            
-            if (game) {
-                renderHighscoreScreen(game);
-            }
+        tab.addEventListener('click', () => {
+            document.querySelector('.highscore-tab.active')?.classList.remove('active');
+            tab.classList.add('active');
+            const game = tab.getAttribute('data-game') as GameType;
+            displayHighscores(game);
         });
     });
-});
+}
+
+// --- INITIALIZATION ---
+loadHighscores();
+setupEventListeners();

@@ -18,7 +18,9 @@
     <!-- Menu Screen -->
     <div class="menu-screen active" id="menuScreen">
       <h1>🍺 Henrys Bierolympiade 🍺</h1>
-      <div class="character henry"></div>
+      <div class="character henry">
+        <img src="/assets/henry.png" alt="Henry Rauhbein">
+      </div>
       <div class="speech-bubble">
         "Hallo! Ich bin Henry Rauhbein! Wähle ein Spiel und versuche mich zu schlagen!"
       </div>
@@ -29,17 +31,6 @@
             <button class="game-select-btn" data-game="bier-blitz">⚡ Bier-Blitz</button>
             <button class="game-select-btn" data-game="schieben">🍻 Krug-Schieben</button>
         </div>
-      </div>
-      
-      <div id="difficultySelection" style="display: none;">
-        <h3 style="margin-top: 15px; color: #2a5298;">Wähle deine Schwierigkeit:</h3>
-        <div class="difficulty-buttons">
-            <button class="difficulty-btn" data-difficulty="easy">😊 Anfänger</button>
-            <button class="difficulty-btn" data-difficulty="medium">😤 Normal</button>
-            <button class="difficulty-btn" data-difficulty="hard">🔥 Profi</button>
-            <button class="difficulty-btn" data-difficulty="extreme">💀 Extrem</button>
-        </div>
-        <button id="backToGameSelectionBtn">Zurück</button>
       </div>
       
       <button id="showHighscoresBtn">🏆 Bestenliste 🏆</button>
@@ -121,6 +112,8 @@
             </div>
         </div>
         
+        <div class="turn-indicator player" id="turnIndicator">Dein Zug 👤</div>
+
         <div class="shuffle-game-area">
             <div class="shuffle-table">
                 <div class="shuffle-mug">🍺</div>
@@ -157,7 +150,9 @@
     <!-- Game Over Screen -->
     <div class="gameover-screen" id="gameoverScreen">
       <h1 id="gameoverTitle">Runde vorbei!</h1>
-      <div class="character henry"></div>
+      <div class="character henry">
+        <img src="/assets/henry.png" alt="Henry Rauhbein">
+      </div>
       <div class="speech-bubble" id="finalQuote"></div>
 
       <div class="stats-bar" style="background: white; padding: 15px;">
@@ -174,7 +169,7 @@
         <div class="stat-item">
           <div class="stat-icon">🏆</div>
           <div class="stat-value" id="finalRound">0</div>
-          <div class="stat-label">Runden</div>
+          <div class="stat-label" id="finalRoundLabel">Runden</div>
         </div>
         <div class="stat-item" id="finalAccuracyContainer">
           <div class="stat-icon">🎯</div>
