@@ -136,7 +136,7 @@ function endGame(gameType: GameType) {
 
     const finalScore = totalPlayerScore;
     const won = totalPlayerScore > totalHenryScore;
-
+    
     const gameoverTitleEl = document.getElementById('gameoverTitle');
     if (gameoverTitleEl) gameoverTitleEl.textContent = won ? '🏆 DU HAST GEWONNEN! 🏆' : '😢 HENRY GEWINNT! 😢';
     
@@ -304,6 +304,7 @@ function handleCellClick(index: number) {
 
   if (beer && !beer.classList.contains('beer-hit')) {
     const points = parseInt(beer.dataset.points || '0');
+
     const now = Date.now();
     if (now - lastHitTime < 1000) {
       combo++;
@@ -423,6 +424,7 @@ function endKlickerRound() {
   gameoverScreen?.classList.add('active');
 
   const won = playerScore > henryScore;
+  
   const accuracy = hits + misses > 0 ? Math.round((hits / (hits + misses)) * 100) : 0;
 
   document.getElementById('gameoverTitle')!.textContent = `Runde ${currentRound} beendet!`;
@@ -615,7 +617,9 @@ function henrySlide() {
     mug.style.transition = 'none';
     mug.style.transform = 'translateX(-50%)';
 
-    setTimeout(() => animateMugSlide(henryPower, henryAngle, 'henry'), 500);
+    setTimeout(() => {
+        animateMugSlide(henryPower, henryAngle, 'henry')
+    }, 500);
 }
 
 function endShuffleRound() {

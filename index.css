@@ -12,9 +12,8 @@
 body {
   font-family: 'Roboto', sans-serif;
   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%);
-  min-height: 100vh;
-  /* Use svh to account for mobile browser UI */
-  min-height: 100svh;
+  height: 100vh; /* Fallback */
+  height: 100svh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -47,14 +46,14 @@ body::before {
 .game-container {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 25px;
-  padding: clamp(10px, 3vw, 20px) clamp(10px, 4vw, 25px);
+  padding: clamp(10px, 2svh, 15px) clamp(10px, 4vw, 25px); /* Reduced vertical padding */
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
   max-width: 650px;
   width: 95%;
   text-align: center;
   position: relative;
   z-index: 1;
-  max-height: 95svh;
+  max-height: 98svh;
   overflow-y: auto;
 }
 
@@ -64,9 +63,8 @@ h1 {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 15px;
-  /* Make font size responsive */
-  font-size: clamp(1.8em, 6vw, 2.4em);
+  margin-bottom: clamp(10px, 2svh, 15px); /* Reduced margin */
+  font-size: clamp(1.7em, 5.5vw, 2.3em); /* Reduced font size */
   filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
   animation: pulse 2s infinite;
 }
@@ -88,16 +86,16 @@ h1 {
 }
 
 .character {
-  width: 100px;
-  height: 100px;
-  margin: 15px auto;
+  width: clamp(80px, 15svh, 100px); /* Responsive size */
+  height: clamp(80px, 15svh, 100px);
+  margin: clamp(10px, 2svh, 15px) auto; /* Responsive margin */
   position: relative;
 }
 
 .character.henry::before {
   content: '🧔‍♂️';
-  font-size: 80px;
-  line-height: 100px;
+  font-size: clamp(60px, 12svh, 80px); /* Match emoji size to container */
+  line-height: clamp(80px, 15svh, 100px);
   position: absolute;
   top: 0; left: 0;
   width: 100%;
@@ -116,14 +114,14 @@ h1 {
   background: white;
   border: 3px solid #2a5298;
   border-radius: 20px;
-  padding: 10px;
-  margin: 8px auto;
+  padding: clamp(8px, 1.5svh, 10px); /* Reduced padding */
+  margin: clamp(8px, 1.5svh, 10px) auto; /* Reduced margin */
   position: relative;
   max-width: 90%;
   font-style: italic;
   color: #333;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  font-size: 0.9em;
+  font-size: clamp(0.85em, 2.2svh, 0.9em); /* Responsive font size */
 }
 
 .speech-bubble::after {
@@ -142,7 +140,7 @@ h1 {
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(4, 1fr);
   gap: clamp(4px, 1.5vw, 8px); /* Responsive gap */
-  margin: 15px auto;
+  margin: clamp(10px, 2svh, 15px) auto; /* Reduced margin */
   max-width: 380px; /* Adjusted for 4x4 grid */
   width: 100%; /* Make it take full width of parent */
   aspect-ratio: 1;
@@ -203,13 +201,13 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 10px 0;
-  padding: 10px;
+  margin: 5px 0; /* Reduced margin */
+  padding: 8px; /* Reduced padding */
   background: linear-gradient(135deg, #667eea, #764ba2);
   border-radius: 15px;
   color: white;
   flex-wrap: wrap; /* Allow wrapping on small screens */
-  gap: 10px;
+  gap: 8px; /* Reduced gap */
 }
 
 .timer-display {
@@ -233,8 +231,8 @@ h1 {
   display: grid;
   grid-template-columns: repeat(4, 1fr); /* Force 4 columns */
   gap: 5px; /* Tighter gap */
-  margin: 10px 0;
-  padding: 8px;
+  margin: 8px 0; /* Reduced margin */
+  padding: 6px; /* Reduced padding */
   background: rgba(0,0,0,0.05);
   border-radius: 10px;
 }
@@ -254,7 +252,7 @@ button {
   transition: all 0.3s;
   font-family: 'Bungee', cursive;
   box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-  margin: 8px;
+  margin: 5px; /* Reduced margin */
   text-transform: uppercase;
   min-height: 44px; /* For better mobile tap targets */
 }
@@ -272,7 +270,7 @@ button:disabled {
     grid-template-columns: 1fr;
     gap: 10px;
     max-width: 300px;
-    margin: 15px auto;
+    margin: clamp(10px, 2svh, 15px) auto; /* Reduced margin */
 }
 .game-select-btn {
     padding: 12px 20px;
@@ -286,7 +284,7 @@ button:disabled {
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   max-width: 300px;
-  margin: 15px auto;
+  margin: clamp(10px, 2svh, 15px) auto; /* Reduced margin */
 }
 .difficulty-btn { padding: 8px 15px; font-size: 0.85em; }
 
@@ -386,7 +384,6 @@ button:disabled {
 /* --- KRUG-SCHIEBEN STYLES (MOBILE OPTIMIZED) --- */
 #shuffleHenryQuote {
     padding: 5px;
-    margin: 8px auto;
     font-size: clamp(0.7em, 2vw, 0.8em);
 }
 
@@ -394,22 +391,26 @@ button:disabled {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 5px 0;
+    margin-top: 10px; /* Reduced margin */
+    padding-bottom: 10px; /* Reduced padding */
+    perspective: 1000px;
 }
 
 .shuffle-table {
     flex-shrink: 0;
     width: 100%;
-    max-width: 300px;
+    max-width: 280px; /* Reduced size */
     margin: 0;
     aspect-ratio: 1 / 1.5;
-    max-height: 55vh;
+    max-height: 50svh; /* Reduced height */
     background: linear-gradient(180deg, #c2a26c, #a17d48);
     border: clamp(6px, 2vw, 10px) solid #5a3d2b;
     border-radius: 10px;
     position: relative;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+    box-shadow: 0 30px 40px -20px rgba(0,0,0,0.4), inset 0 0 20px rgba(0,0,0,0.3);
     overflow: hidden;
+    transform: rotateX(30deg);
+    transform-style: preserve-3d;
 }
 
 .shuffle-mug {
@@ -424,7 +425,7 @@ button:disabled {
 
 .target {
     position: absolute;
-    top: 25%;
+    top: 35%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 80%;
@@ -444,6 +445,13 @@ button:disabled {
     color: rgba(255, 255, 255, 0.8);
     text-shadow: 2px 2px 3px rgba(0,0,0,0.5);
     box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+    box-sizing: border-box; /* Added for padding safety */
+}
+
+/* Position score text on outer rings so it's visible */
+.r-10, .r-20, .r-50 {
+    align-items: flex-start;
+    padding-top: 8px;
 }
 
 .ring p { font-size: clamp(0.8em, 4vmin, 1.4em); }
@@ -458,7 +466,7 @@ button:disabled {
     align-items: center;
     justify-content: space-around;
     gap: 5px;
-    margin-top: 10px;
+    margin-top: 8px; /* Reduced margin */
 }
 
 .control-group {
@@ -530,7 +538,17 @@ button:disabled {
 }
 
 
-/* --- HIGHSCORE INPUT --- */
+/* --- GAME OVER / HIGHSCORE INPUT --- */
+#newHighscore {
+    margin: clamp(10px, 2svh, 15px) 0;
+}
+
+#roundResult {
+    margin: clamp(10px, 2svh, 15px) 0;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
 .highscore-input-form {
     display: flex;
     justify-content: center;
@@ -562,7 +580,7 @@ button:disabled {
     display: flex;
     justify-content: center;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 15px; /* Reduced margin */
 }
 .highscore-tab {
     background: #ddd;
@@ -577,7 +595,7 @@ button:disabled {
     box-shadow: 0 6px 20px rgba(0,0,0,0.25);
 }
 .highscore-table-container {
-    max-height: 50vh;
+    max-height: 45vh; /* Reduced height */
     overflow-y: auto;
     background: rgba(0,0,0,0.05);
     border-radius: 10px;
