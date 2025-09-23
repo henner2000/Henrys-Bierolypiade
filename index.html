@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Henrys Bierolympiade</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <!-- Floating beers in background -->
+  <div class="floating-beer" style="top: 10%; left: -50px; animation-delay: 0s;">🍺</div>
+  <div class="floating-beer" style="top: 30%; left: -50px; animation-delay: 3s;">🍻</div>
+  <div class="floating-beer" style="top: 50%; left: -50px; animation-delay: 6s;">🍺</div>
+  <div class="floating-beer" style="top: 70%; left: -50px; animation-delay: 9s;">🍻</div>
+  <div class="floating-beer" style="top: 20%; left: -50px; animation-delay: 12s;">🍺</div>
+
+  <div class="game-container">
+    <!-- Menu Screen -->
+    <div class="menu-screen active" id="menuScreen">
+      <h1>🍺 Henrys Bierolympiade 🍺</h1>
+      <div class="character henry"></div>
+      <div class="speech-bubble">
+        "Hallo! Ich bin Henry Rauhbein! Wähle ein Spiel und versuche mich zu schlagen!"
+      </div>
+
+      <div id="gameSelection">
+        <h3 style="margin-top: 15px; color: #2a5298;">Wähle ein Spiel:</h3>
+        <div class="game-selection-buttons">
+            <button class="game-select-btn" data-game="bier-blitz">⚡ Bier-Blitz</button>
+            <button class="game-select-btn" data-game="schieben">🍻 Krug-Schieben</button>
+        </div>
+      </div>
+      
+      <div id="difficultySelection" style="display: none;">
+        <h3 style="margin-top: 15px; color: #2a5298;">Wähle deine Schwierigkeit:</h3>
+        <div class="difficulty-buttons">
+            <button class="difficulty-btn" data-difficulty="easy">😊 Anfänger</button>
+            <button class="difficulty-btn" data-difficulty="medium">😤 Normal</button>
+            <button class="difficulty-btn" data-difficulty="hard">🔥 Profi</button>
+            <button class="difficulty-btn" data-difficulty="extreme">💀 Extrem</button>
+        </div>
+      </div>
+      
+      <button id="showHighscoresBtn">🏆 Bestenliste 🏆</button>
+
+    </div>
+
+    <!-- Game Screen (Bier-Blitz) -->
+    <div class="game-screen" id="gameScreen">
+      <div class="game-header">
+        <div class="timer-display" id="timerDisplay">
+          <span>⏱️</span>
+          <span id="timeLeft">30</span>
+        </div>
+        <div class="score-display">
+          <div class="score-item">
+            <div class="score-label">Du</div>
+            <div class="score-value" id="playerScore">0</div>
+          </div>
+          <div class="score-item">
+            <div class="score-label">Henry</div>
+            <div class="score-value" id="henryScore">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressBar" style="width: 100%"></div>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-value" id="roundNumber">1</div>
+          <div class="stat-label">Runde</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-value" id="comboMax">0</div>
+          <div class="stat-label">Max Combo</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-value" id="accuracy">0%</div>
+          <div class="stat-label">Treffer</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">🌟</div>
+          <div class="stat-value" id="streak">0</div>
+          <div class="stat-label">Serie</div>
+        </div>
+      </div>
+
+      <div id="bonusRoundIndicator" style="display: none;" class="bonus-round">
+        🔥 BONUS RUNDE! Doppelte Punkte! 🔥
+      </div>
+
+      <div class="game-grid" id="gameGrid"></div>
+
+      <div class="speech-bubble" id="henryQuote">
+        "Los geht's! 30 Sekunden!"
+      </div>
+
+      <button id="pauseBtn">Pause</button>
+      <button id="quitBtn">Aufgeben</button>
+    </div>
+
+    <!-- Shuffleboard Game Screen -->
+    <div class="game-screen" id="shuffleGameScreen">
+        <div class="game-header">
+            <div class="timer-display" id="shuffleRoundDisplay">Runde 1/5</div>
+            <div class="score-display">
+                <div class="score-item">
+                    <div class="score-label">Du</div>
+                    <div class="score-value" id="shufflePlayerScore">0</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">Henry</div>
+                    <div class="score-value" id="shuffleHenryScore">0</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="shuffle-game-area">
+            <div class="shuffle-table">
+                <div class="shuffle-mug">🍺</div>
+                <div class="target">
+                    <div class="ring r-100"><p>100</p></div>
+                    <div class="ring r-50"><p>50</p></div>
+                    <div class="ring r-20"><p>20</p></div>
+                    <div class="ring r-10"><p>10</p></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="speech-bubble" id="shuffleHenryQuote">
+            "Zeig mir, was du drauf hast! Schieb den Krug!"
+        </div>
+
+        <div class="shuffle-controls">
+            <div class="control-group">
+                <label>Kraft</label>
+                <div class="power-meter-h">
+                    <div class="power-meter-indicator-h"></div>
+                </div>
+            </div>
+            <button id="shuffleActionBtn">Kraft!</button>
+            <div class="control-group">
+                <label>Winkel</label>
+                <div class="angle-meter-h">
+                    <div class="angle-indicator-h"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div class="gameover-screen" id="gameoverScreen">
+      <h1 id="gameoverTitle">Runde vorbei!</h1>
+      <div class="character henry"></div>
+      <div class="speech-bubble" id="finalQuote"></div>
+
+      <div class="stats-bar" style="background: white; padding: 15px;">
+        <div class="stat-item">
+          <div class="stat-icon">🍺</div>
+          <div class="stat-value" id="finalPlayerScore">0</div>
+          <div class="stat-label">Deine Punkte</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">🍻</div>
+          <div class="stat-value" id="finalHenryScore">0</div>
+          <div class="stat-label">Henry</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-value" id="finalRound">0</div>
+          <div class="stat-label">Runden</div>
+        </div>
+        <div class="stat-item" id="finalAccuracyContainer">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-value" id="finalAccuracy">0%</div>
+          <div class="stat-label">Genauigkeit</div>
+        </div>
+      </div>
+
+      <div id="newHighscore" style="display: none; margin: 15px 0;">
+        <h3 style="color: #FFD700; font-family: 'Bungee', cursive;">🏆 NEUER HIGHSCORE! 🏆</h3>
+        <p style="margin: 5px 0 10px;">Trage deinen Namen für die Bestenliste ein:</p>
+        <div class="highscore-input-form">
+            <input type="text" id="playerNameInput" placeholder="Dein Name" maxlength="12">
+            <button id="saveHighscoreBtn">Speichern</button>
+        </div>
+      </div>
+
+      <div id="roundResult" style="margin: 15px 0; font-size: 1.1em; font-weight: bold;"></div>
+
+      <button id="nextRoundBtn" style="display: none;">Nächste Runde</button>
+      <button id="backToMenuBtn">Zum Menü</button>
+    </div>
+
+    <!-- Highscore Screen -->
+    <div class="highscore-screen" id="highscoreScreen">
+        <h1>🏆 Bestenliste 🏆</h1>
+        <div class="highscore-tabs">
+            <button class="highscore-tab active" data-game="bier-blitz">Bier-Blitz</button>
+            <button class="highscore-tab" data-game="schieben">Krug-Schieben</button>
+        </div>
+        <div class="highscore-table-container" id="highscoreTableContainer">
+            <!-- Highscores will be injected here by JS -->
+        </div>
+        <button id="backToMenuFromHighscoresBtn">Zum Menü</button>
+    </div>
+
+  </div>
+
+  <script type="module" src="index.tsx"></script>
+</body>
+</html>
