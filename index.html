@@ -18,83 +18,17 @@
         <img src="./assets/henry.png" alt="Henry Rauhbein">
       </div>
       <div class="speech-bubble">
-        "Hallo! Ich bin Henry Rauhbein! Wähle ein Spiel und versuche mich zu schlagen!"
+        "Hallo! Ich bin Henry Rauhbein! Versuche mich im Krug-Schieben zu schlagen!"
       </div>
 
       <div class="sponsor-section">
         <p>Präsentiert von</p>
         <img src="./assets/ake_logo.png" alt="AKE Sponsor Logo" class="sponsor-logo">
       </div>
-
-      <div id="gameSelection">
-        <h3 style="margin-top: 15px; color: #bdc3c7;">Wähle ein Spiel:</h3>
-        <div class="game-selection-buttons">
-            <button class="game-select-btn" data-game="bier-blitz">⚡ BIER-BLITZ ⚡</button>
-            <button class="game-select-btn" data-game="schieben">🍻 KRUG-SCHIEBEN 🍻</button>
-        </div>
-      </div>
       
+      <button id="startGameBtn">🍻 SPIEL STARTEN 🍻</button>
       <button id="showHighscoresBtn">🏆 RUHMESHALLE 🏆</button>
 
-    </div>
-
-    <!-- Game Screen (Bier-Blitz) -->
-    <div class="game-screen" id="gameScreen">
-      <div class="game-header">
-        <div class="timer-display" id="timerDisplay">
-          <span>⏱️</span>
-          <span id="timeLeft">30</span>
-        </div>
-        <div class="score-display">
-          <div class="score-item">
-            <div class="score-label"><span class="score-label-icon">👤</span> Du</div>
-            <div class="score-value" id="playerScore">0</div>
-          </div>
-          <div class="score-item">
-            <div class="score-label"><img src="./assets/henry.png" class="score-label-icon" alt="Henry"> Henry</div>
-            <div class="score-value" id="henryScore">0</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="progress-bar">
-        <div class="progress-fill" id="progressBar" style="width: 100%"></div>
-      </div>
-
-      <div class="stats-bar">
-        <div class="stat-item">
-          <div class="stat-icon">🏆</div>
-          <div class="stat-value" id="roundNumber">1</div>
-          <div class="stat-label">Runde</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-icon">⚡</div>
-          <div class="stat-value" id="comboMax">0</div>
-          <div class="stat-label">Max Combo</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-icon">🎯</div>
-          <div class="stat-value" id="accuracy">0%</div>
-          <div class="stat-label">Treffer</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-icon">🌟</div>
-          <div class="stat-value" id="streak">0</div>
-          <div class="stat-label">Serie</div>
-        </div>
-      </div>
-
-      <div id="bonusRoundIndicator" style="display: none;" class="bonus-round">
-        🔥 BONUS RUNDE! Doppelte Punkte! 🔥
-      </div>
-
-      <div class="game-grid" id="gameGrid"></div>
-
-      <div class="speech-bubble" id="henryQuote">
-        "Los geht's! 30 Sekunden!"
-      </div>
-
-      <button id="pauseBtn">Pause</button>
     </div>
 
     <!-- Shuffleboard Game Screen -->
@@ -172,7 +106,7 @@
           <div class="stat-value" id="finalRound">0</div>
           <div class="stat-label" id="finalRoundLabel">Runden</div>
         </div>
-        <div class="stat-item" id="finalAccuracyContainer">
+        <div class="stat-item" id="finalAccuracyContainer" style="display: none;">
           <div class="stat-icon">🎯</div>
           <div class="stat-value" id="finalAccuracy">0%</div>
           <div class="stat-label">Genauigkeit</div>
@@ -196,11 +130,7 @@
 
     <!-- Highscore Screen -->
     <div class="highscore-screen" id="highscoreScreen">
-        <h1>🏆 RUHMESHALLE 🏆</h1>
-        <div class="highscore-tabs">
-            <button class="highscore-tab active" data-game="bier-blitz">Bier-Blitz</button>
-            <button class="highscore-tab" data-game="schieben">Krug-Schieben</button>
-        </div>
+        <h1>🏆 Ruhmeshalle: Krug-Schieben 🏆</h1>
         <div class="highscore-table-container" id="highscoreTableContainer">
             <!-- Highscores will be injected here by JS -->
         </div>
