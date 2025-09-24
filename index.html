@@ -5,35 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Henrys Bierolympiade</title>
   <link rel="stylesheet" href="index.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Floating beers in background -->
-  <div class="floating-beer" style="top: 10%; left: -50px; animation-delay: 0s;">🍺</div>
-  <div class="floating-beer" style="top: 30%; left: -50px; animation-delay: 3s;">🍻</div>
-  <div class="floating-beer" style="top: 50%; left: -50px; animation-delay: 6s;">🍺</div>
-  <div class="floating-beer" style="top: 70%; left: -50px; animation-delay: 9s;">🍻</div>
-  <div class="floating-beer" style="top: 20%; left: -50px; animation-delay: 12s;">🍺</div>
 
   <div class="game-container">
     <!-- Menu Screen -->
     <div class="menu-screen active" id="menuScreen">
-      <h1>🍺 Henrys Bierolympiade 🍺</h1>
+      <h1>Rauhbein's Bierolympiade</h1>
       <div class="character henry">
-        <img src="/assets/henry.jpeg" alt="Henry Rauhbein">
+        <img src="./assets/henry.png" alt="Henry Rauhbein">
       </div>
       <div class="speech-bubble">
         "Hallo! Ich bin Henry Rauhbein! Wähle ein Spiel und versuche mich zu schlagen!"
       </div>
 
       <div id="gameSelection">
-        <h3 style="margin-top: 15px; color: #2a5298;">Wähle ein Spiel:</h3>
+        <h3 style="margin-top: 15px; color: #bdc3c7;">Wähle ein Spiel:</h3>
         <div class="game-selection-buttons">
-            <button class="game-select-btn" data-game="bier-blitz">⚡ Bier-Blitz</button>
-            <button class="game-select-btn" data-game="schieben">🍻 Krug-Schieben</button>
+            <button class="game-select-btn" data-game="bier-blitz">⚡ BIER-BLITZ ⚡</button>
+            <button class="game-select-btn" data-game="schieben">🍻 KRUG-SCHIEBEN 🍻</button>
         </div>
       </div>
       
-      <button id="showHighscoresBtn">🏆 Bestenliste 🏆</button>
+      <button id="showHighscoresBtn">🏆 RUHMESHALLE 🏆</button>
 
     </div>
 
@@ -151,11 +146,11 @@
     <div class="gameover-screen" id="gameoverScreen">
       <h1 id="gameoverTitle">Runde vorbei!</h1>
       <div class="character henry">
-        <img src="/assets/henry.png" alt="Henry Rauhbein">
+        <img src="./assets/henry.png" alt="Henry Rauhbein">
       </div>
       <div class="speech-bubble" id="finalQuote"></div>
 
-      <div class="stats-bar" style="background: white; padding: 15px;">
+      <div class="stats-bar" style="background: transparent; padding: 15px; border: 1px solid #7f8c8d;">
         <div class="stat-item">
           <div class="stat-icon">🍺</div>
           <div class="stat-value" id="finalPlayerScore">0</div>
@@ -179,23 +174,23 @@
       </div>
 
       <div id="newHighscore" style="display: none;">
-        <h3 style="color: #FFD700; font-family: 'Bungee', cursive;">🏆 NEUER HIGHSCORE! 🏆</h3>
-        <p style="margin: 5px 0 10px;">Trage deinen Namen für die Bestenliste ein:</p>
+        <h3>🏆 NEUER HIGHSCORE! 🏆</h3>
+        <p style="margin: 5px 0 10px;">Trage deinen Namen für die Ruhmeshalle ein:</p>
         <div class="highscore-input-form">
             <input type="text" id="playerNameInput" placeholder="Dein Name" maxlength="12">
-            <button id="saveHighscoreBtn">Speichern</button>
+            <button id="saveHighscoreBtn">SPEICHERN</button>
         </div>
       </div>
 
       <div id="roundResult"></div>
 
-      <button id="nextRoundBtn" style="display: none;">Nächste Runde</button>
-      <button id="backToMenuBtn">Zum Menü</button>
+      <button id="nextRoundBtn" style="display: none;">NÄCHSTE RUNDE</button>
+      <button id="backToMenuBtn">ZUM MENÜ</button>
     </div>
 
     <!-- Highscore Screen -->
     <div class="highscore-screen" id="highscoreScreen">
-        <h1>🏆 Bestenliste 🏆</h1>
+        <h1>🏆 RUHMESHALLE 🏆</h1>
         <div class="highscore-tabs">
             <button class="highscore-tab active" data-game="bier-blitz">Bier-Blitz</button>
             <button class="highscore-tab" data-game="schieben">Krug-Schieben</button>
@@ -203,7 +198,7 @@
         <div class="highscore-table-container" id="highscoreTableContainer">
             <!-- Highscores will be injected here by JS -->
         </div>
-        <button id="backToMenuFromHighscoresBtn">Zum Menü</button>
+        <button id="backToMenuFromHighscoresBtn">ZUM MENÜ</button>
     </div>
 
   </div>
