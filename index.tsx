@@ -487,7 +487,7 @@ function updateShuffleUI() {
 
 function startShuffleTurn() {
     const turnIndicator = document.getElementById('turnIndicator')!;
-    turnIndicator.textContent = 'Dein Zug 👤';
+    turnIndicator.innerHTML = '<span class="turn-indicator-icon player-icon">👤</span> Dein Zug';
     turnIndicator.className = 'turn-indicator player';
 
     shuffleState = 'power';
@@ -569,7 +569,7 @@ function animateMugSlide(power: number, angle: number, user: 'player' | 'henry')
             showScorePopup(mug, `+${score}`);
             document.getElementById('shuffleHenryQuote')!.textContent = score >= 50 ? henryQuotes.shuffleLose[Math.floor(Math.random() * henryQuotes.shuffleLose.length)] : "Mein Zug!";
             
-            turnIndicator.textContent = 'Henrys Zug 🧔‍♂️';
+            turnIndicator.innerHTML = `<img src="./assets/henry.png" alt="Henry" class="turn-indicator-icon"> Henrys Zug`;
             turnIndicator.className = 'turn-indicator henry';
             
             setTimeout(henrySlide, 2000);

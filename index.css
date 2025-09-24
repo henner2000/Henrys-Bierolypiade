@@ -216,7 +216,29 @@ h1 {
 
 .score-display { display: flex; gap: 20px; align-items: center; }
 .score-item { text-align: center; }
-.score-label { font-size: 0.7em; opacity: 0.9; text-transform: uppercase; }
+.score-label {
+    font-size: 0.7em;
+    opacity: 0.9;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+}
+.score-label-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #7f8c8d;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1em;
+    background: #34495e;
+    flex-shrink: 0;
+}
+
 .score-value { font-size: 1.3em; font-weight: bold; font-family: 'Cinzel Decorative', cursive; }
 
 .stats-bar {
@@ -401,6 +423,10 @@ button:disabled {
     text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
     transition: background-color 0.5s, transform 0.3s;
     box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 .turn-indicator.player {
     background-color: #2980b9;
@@ -408,6 +434,24 @@ button:disabled {
 .turn-indicator.henry {
     background-color: #c0392b;
 }
+
+.turn-indicator-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    flex-shrink: 0;
+}
+.turn-indicator-icon.player-icon {
+    background: #2c3e50;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    font-family: 'Roboto', sans-serif;
+}
+
 
 #shuffleHenryQuote {
     padding: 5px;
