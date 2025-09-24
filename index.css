@@ -454,6 +454,12 @@ button:disabled {
 }
 
 /* --- GAME OVER / HIGHSCORE INPUT --- */
+#gameoverScreen .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
 #newHighscore {
     margin: clamp(10px, 2svh, 15px) 0;
 }

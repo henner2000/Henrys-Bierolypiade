@@ -29,7 +29,7 @@ let highscoresData: Highscore[] = [];
 let scoreToSave = 0; // Temp score while waiting for name input
 
 // --- KRUG-SCHIEBEN STATE ---
-const SHUFFLE_MAX_ROUNDS = 5;
+const SHUFFLE_MAX_ROUNDS = 10;
 type ShuffleState = 'power' | 'angle' | 'sliding' | 'done';
 let shuffleState: ShuffleState = 'done';
 let selectedPower = 0;
@@ -286,15 +286,29 @@ function henrySlide() {
     mug.style.transition = 'none';
     mug.style.transform = 'translateX(-50%)';
 
-    const settings = difficultySettings[difficulty];
-    
-    // Henry's "thinking" - simulate power and angle
-    const powerMin = settings.shufflePower.min;
-    const powerMax = settings.shufflePower.max;
-    const henryPower = powerMin + Math.random() * (powerMax - powerMin);
-    
-    const angleError = settings.shuffleAngleError;
-    const henryAngle = (Math.random() - 0.5) * 2 * angleError;
+    let henryPower: number;
+    let henryAngle: number;
+
+    // Henry hat eine 80%ige Chance, sehr präzise zu spielen (entspricht "schwer")
+    if (Math.random() < 0.8) {
+        // "Profi"-Wurf: verwendet die Einstellungen für den Schwierigkeitsgrad "schwer"
+        const settings = difficultySettings['hard'];
+        const powerMin = settings.shufflePower.min;
+        const powerMax = settings.shufflePower.max;
+        henryPower = powerMin + Math.random() * (powerMax - powerMin);
+        
+        const angleError = settings.shuffleAngleError;
+        henryAngle = (Math.random() - 0.5) * 2 * angleError;
+    } else {
+        // "Normaler" Wurf: verwendet die Standardeinstellungen ("mittel")
+        const settings = difficultySettings['medium'];
+        const powerMin = settings.shufflePower.min;
+        const powerMax = settings.shufflePower.max;
+        henryPower = powerMin + Math.random() * (powerMax - powerMin);
+        
+        const angleError = settings.shuffleAngleError;
+        henryAngle = (Math.random() - 0.5) * 2 * angleError;
+    }
     
     setTimeout(() => {
         animateMugSlide(henryPower, henryAngle, 'henry');
