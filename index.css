@@ -105,6 +105,29 @@ h1 {
   font-size: clamp(0.85em, 2.2svh, 0.9em);
 }
 
+.sponsor-section {
+  margin: clamp(15px, 3svh, 20px) auto;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid #555;
+  max-width: 250px;
+}
+
+.sponsor-section p {
+  font-size: 0.8em;
+  color: #bdc3c7;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.sponsor-logo {
+  max-width: 120px;
+  height: auto;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
+}
+
 .game-grid {
   display: grid;
   gap: clamp(4px, 1.5vw, 8px);
