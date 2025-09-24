@@ -10,6 +10,7 @@
 <body>
 
   <div class="game-container">
+    <button id="muteBtn" class="sound-toggle" title="Ton an/aus">🔊</button>
     <!-- Menu Screen -->
     <div class="menu-screen active" id="menuScreen">
       <a href="https://www.rauhbein.de/" target="_blank" rel="noopener noreferrer">
@@ -30,6 +31,7 @@
       
       <button id="startGameBtn">🍻 SPIEL STARTEN 🍻</button>
       <button id="showHighscoresBtn">🏆 RUHMESHALLE 🏆</button>
+      <button id="showRulesBtn">📜 SPIELREGELN 📜</button>
 
     </div>
 
@@ -49,7 +51,7 @@
             </div>
         </div>
         
-        <div class="turn-indicator player" id="turnIndicator"><span class="turn-indicator-icon player-icon">👤</span> Dein Zug</div>
+        <div class="turn-indicator player" id="turnIndicator">Dein Zug</div>
 
         <div class="shuffle-game-area">
             <div class="shuffle-table">
@@ -155,7 +157,39 @@
         <button id="backToMenuFromHighscoresBtn">ZUM MENÜ</button>
     </div>
 
+    <!-- Rules Screen -->
+    <div class="rules-screen" id="rulesScreen">
+        <h1>Spielregeln: Bierkrug schieben</h1>
+        <div class="rules-content">
+            <p><strong>Ziel des Spiels:</strong></p>
+            <p>Schiebe den Bierkrug so nah wie möglich an die Mitte des Ziels, um die meisten Punkte zu erzielen. Wer nach 10 Runden mehr Punkte als Henry hat, gewinnt!</p>
+            <br>
+            <p><strong>Steuerung:</strong></p>
+            <ul>
+                <li><strong>1. KRAFT:</strong> Klicke den "Kraft!"-Button, um die Stärke deines Schubs festzulegen. Je weiter sich der Balken füllt, desto kräftiger der Schub.</li>
+                <li><strong>2. WINKEL:</strong> Klicke den "Winkel!"-Button, um die Richtung festzulegen. Versuche, den Indikator genau in der Mitte zu stoppen, um perfekt gerade zu schieben.</li>
+            </ul>
+            <br>
+            <p><strong>Punktevergabe:</strong></p>
+            <ul>
+                <li>Äußerer blauer Ring: <strong>10 Punkte</strong></li>
+                <li>Grüner Ring: <strong>20 Punkte</strong></li>
+                <li>Gelber Ring: <strong>50 Punkte</strong></li>
+                <li>Innerer roter Kreis (ins Schwarze!): <strong>100 Punkte</strong></li>
+            </ul>
+        </div>
+        <button id="backToMenuFromRulesBtn">ZUM MENÜ</button>
+    </div>
+
   </div>
+  
+  <!-- Sound Effects -->
+  <audio id="clickSound" src="./assets/sounds/click.wav" preload="auto"></audio>
+  <audio id="slideSound" src="./assets/sounds/slide.wav" preload="auto"></audio>
+  <audio id="scoreSound" src="./assets/sounds/score.wav" preload="auto"></audio>
+  <audio id="winSound" src="./assets/sounds/win.wav" preload="auto"></audio>
+  <audio id="loseSound" src="./assets/sounds/lose.wav" preload="auto"></audio>
+  <audio id="backgroundMusic" src="./assets/sounds/background.mp3" loop preload="auto"></audio>
 
   <script type="module" src="index.tsx"></script>
 </body>

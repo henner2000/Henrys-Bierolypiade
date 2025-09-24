@@ -27,6 +27,8 @@ const selectedGame: GameType = GameType.SCHIEBEN; // Only one game now
 let highscoresData: Highscore[] = [];
 let scoreToSave = 0; // Temp score while waiting for name input
 let lastHenryQuotes: { [key: string]: string } = {};
+let isMuted = false;
+let isMusicStarted = false;
 
 // --- KRUG-SCHIEBEN STATE ---
 const SHUFFLE_MAX_ROUNDS = 10;
@@ -158,6 +160,40 @@ const menuScreen = document.getElementById('menuScreen');
 const shuffleGameScreen = document.getElementById('shuffleGameScreen');
 const gameoverScreen = document.getElementById('gameoverScreen');
 const highscoreScreen = document.getElementById('highscoreScreen');
+const rulesScreen = document.getElementById('rulesScreen');
+const muteBtn = document.getElementById('muteBtn');
+
+// --- SOUND ELEMENTS ---
+const clickSound = document.getElementById('clickSound') as HTMLAudioElement;
+const slideSound = document.getElementById('slideSound') as HTMLAudioElement;
+const scoreSound = document.getElementById('scoreSound') as HTMLAudioElement;
+const winSound = document.getElementById('winSound') as HTMLAudioElement;
+const loseSound = document.getElementById('loseSound') as HTMLAudioElement;
+const backgroundMusic = document.getElementById('backgroundMusic') as HTMLAudioElement;
+const allSounds: (HTMLAudioElement | null)[] = [clickSound, slideSound, scoreSound, winSound, loseSound, backgroundMusic];
+
+// --- SOUND LOGIC ---
+function playSound(sound: HTMLAudioElement | null) {
+  if (isMuted || !sound) return;
+  // Resetting time allows the sound to be re-triggered before it's finished
+  sound.currentTime = 0;
+  sound.play().catch(error => {
+    // Autoplay is often blocked by browsers until the user interacts with the page.
+    console.warn("Sound play was blocked by the browser:", error);
+  });
+}
+
+function startMusicIfNotPlaying() {
+    if (!isMusicStarted && backgroundMusic) {
+        backgroundMusic.volume = 0.2; // Set to a quiet volume
+        backgroundMusic.play().then(() => {
+            isMusicStarted = true;
+        }).catch(error => {
+            console.warn("Background music autoplay was blocked:", error);
+            // We'll try again on the next interaction.
+        });
+    }
+}
 
 // --- GENERIC GAME LOGIC ---
 
@@ -179,6 +215,7 @@ function backToMenu() {
   gameoverScreen?.classList.remove('active');
   highscoreScreen?.classList.remove('active');
   shuffleGameScreen?.classList.remove('active');
+  rulesScreen?.classList.remove('active');
   menuScreen?.classList.add('active');
   document.getElementById('newHighscore')!.style.display = 'none';
   (document.getElementById('playerNameInput') as HTMLInputElement).value = '';
@@ -194,6 +231,12 @@ function endGame() {
     const finalScore = totalPlayerScore;
     const won = totalPlayerScore > totalHenryScore;
     
+    if (won) {
+        playSound(winSound);
+    } else {
+        playSound(loseSound);
+    }
+
     const gameoverTitleEl = document.getElementById('gameoverTitle');
     if (gameoverTitleEl) gameoverTitleEl.textContent = won ? '🏆 DU HAST GEWONNEN! 🏆' : '😢 HENRY GEWINNT! 😢';
     
@@ -250,7 +293,7 @@ function updateShuffleUI() {
 
 function startShuffleTurn() {
     const turnIndicator = document.getElementById('turnIndicator')!;
-    turnIndicator.innerHTML = '<span class="turn-indicator-icon player-icon">👤</span> Dein Zug';
+    turnIndicator.innerHTML = 'Dein Zug';
     turnIndicator.className = 'turn-indicator player';
 
     shuffleState = 'power';
@@ -310,6 +353,7 @@ function animateMugSlide(power: number, angle: number, user: 'player' | 'henry')
     const table = document.querySelector('.shuffle-table') as HTMLElement;
     if (!mug || !table) return;
 
+    playSound(slideSound);
     mug.style.transition = 'transform 2s cubic-bezier(0.2, 0.8, 0.4, 1)';
     
     const tableHeight = table.offsetHeight;
@@ -328,6 +372,10 @@ function animateMugSlide(power: number, angle: number, user: 'player' | 'henry')
 
     setTimeout(() => {
         const score = calculateShuffleScore(mug, table);
+        if (score > 0) {
+            playSound(scoreSound);
+        }
+
         const turnIndicator = document.getElementById('turnIndicator')!;
         
         if (user === 'player') {
@@ -345,7 +393,7 @@ function animateMugSlide(power: number, angle: number, user: 'player' | 'henry')
             }
             document.getElementById('shuffleHenryQuote')!.textContent = playerTurnQuote;
             
-            turnIndicator.innerHTML = `<img src="assets/henry.png" alt="Henry" class="turn-indicator-icon"> Henrys Zug`;
+            turnIndicator.innerHTML = `Henrys Zug`;
             turnIndicator.className = 'turn-indicator henry';
             
             setTimeout(henrySlide, 2000);
@@ -457,8 +505,10 @@ function endShuffleRound() {
     let roundEndQuote = "";
     if (henryScore > playerScore) {
         roundEndQuote = getHenryQuote('roundEndHenryWins');
+        playSound(loseSound);
     } else if (playerScore > henryScore) {
         roundEndQuote = getHenryQuote('roundEndPlayerWins');
+        playSound(winSound);
     } else {
         roundEndQuote = getHenryQuote('roundEndTie');
     }
@@ -594,6 +644,29 @@ function displayHighscores() {
 
 // --- EVENT LISTENERS ---
 function setupEventListeners() {
+    // Delegated listener for button clicks
+    document.body.addEventListener('click', (e) => {
+        startMusicIfNotPlaying();
+        const targetButton = (e.target as HTMLElement).closest('button');
+        if (targetButton && targetButton.id !== 'muteBtn') {
+            playSound(clickSound);
+        }
+    });
+
+    muteBtn?.addEventListener('click', () => {
+        isMuted = !isMuted;
+        if (muteBtn) muteBtn.textContent = isMuted ? '🔇' : '🔊';
+        
+        allSounds.forEach(sound => {
+            if(sound) sound.muted = isMuted;
+        });
+
+        // Feedback sound when unmuting.
+        if (!isMuted) {
+            playSound(clickSound);
+        }
+    });
+
     document.getElementById('startGameBtn')?.addEventListener('click', () => {
         startGame('medium');
     });
@@ -608,7 +681,13 @@ function setupEventListeners() {
         displayHighscores();
     });
 
+    document.getElementById('showRulesBtn')?.addEventListener('click', () => {
+        menuScreen?.classList.remove('active');
+        rulesScreen?.classList.add('active');
+    });
+
     document.getElementById('backToMenuFromHighscoresBtn')?.addEventListener('click', backToMenu);
+    document.getElementById('backToMenuFromRulesBtn')?.addEventListener('click', backToMenu);
 
     document.getElementById('saveHighscoreBtn')?.addEventListener('click', () => {
         const name = (document.getElementById('playerNameInput') as HTMLInputElement).value;

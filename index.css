@@ -1,5 +1,3 @@
-
-
 @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Roboto:wght@400;700&display=swap');
 
 * {
@@ -73,8 +71,8 @@ h1 {
   letter-spacing: 2px;
 }
 
-.menu-screen, .game-screen, .gameover-screen, .highscore-screen { display: none; }
-.menu-screen.active, .game-screen.active, .gameover-screen.active, .highscore-screen.active {
+.menu-screen, .game-screen, .gameover-screen, .highscore-screen, .rules-screen { display: none; }
+.menu-screen.active, .game-screen.active, .gameover-screen.active, .highscore-screen.active, .rules-screen.active {
   display: block;
   animation: fadeIn 0.5s;
 }
@@ -292,7 +290,6 @@ button:disabled {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
 }
 .turn-indicator.player {
     background-color: #2980b9;
@@ -300,24 +297,6 @@ button:disabled {
 .turn-indicator.henry {
     background-color: #c0392b;
 }
-
-.turn-indicator-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #fff;
-    flex-shrink: 0;
-}
-.turn-indicator-icon.player-icon {
-    background: #2c3e50;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2em;
-    font-family: 'Roboto', sans-serif;
-}
-
 
 #shuffleHenryQuote {
     padding: 5px;
@@ -545,6 +524,30 @@ button:disabled {
     font-size: 0.9em;
 }
 
+/* --- RULES SCREEN --- */
+.rules-content {
+    text-align: left;
+    margin: clamp(15px, 3svh, 25px) auto;
+    max-width: 95%;
+    background: rgba(0,0,0,0.2);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #555;
+    font-size: clamp(0.9em, 2.2svh, 1em);
+}
+.rules-content p, .rules-content ul {
+    margin-bottom: 10px;
+}
+.rules-content ul {
+    list-style-position: inside;
+    padding-left: 10px;
+}
+.rules-content li {
+    margin-bottom: 5px;
+    line-height: 1.5;
+}
+
+
 /* --- HIGHSCORE SCREEN --- */
 .highscore-table-container {
     max-height: 45vh;
@@ -656,4 +659,31 @@ button:disabled {
         width: 100%;
         margin: 0;
     }
+}
+
+/* --- SOUND TOGGLE --- */
+.sound-toggle {
+  position: absolute;
+  top: 10px;
+  left: 100%; /* Positioniert den Button am rechten Rand des Containers */
+  margin-left: 15px; /* Fügt einen Abstand rechts vom Container hinzu */
+  z-index: 100;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid #7f8c8d;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.2em;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-transform: none; /* Override general button style */
+  letter-spacing: normal; /* Override general button style */
+  font-family: sans-serif; /* Use system font for emoji */
+  min-height: 0; /* Override general button style */
+}
+
+.sound-toggle:hover {
+  background: rgba(44, 62, 80, 0.8);
 }
