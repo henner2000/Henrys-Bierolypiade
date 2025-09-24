@@ -100,6 +100,14 @@ h1 {
   filter: grayscale(0.3) drop-shadow(0 4px 8px rgba(0,0,0,0.5));
 }
 
+.henry-intro-text {
+  margin: clamp(8px, 1.5svh, 10px) auto;
+  max-width: 90%;
+  font-style: italic;
+  color: #bdc3c7;
+  font-size: clamp(0.85em, 2.2svh, 0.9em);
+}
+
 .speech-bubble {
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid #7f8c8d;
