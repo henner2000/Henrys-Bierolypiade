@@ -12,7 +12,6 @@ type Highscore = {
     name: string;
     score: number;
     date: string;
-    difficulty: string;
     game: GameType;
 }
 
@@ -27,6 +26,7 @@ let difficulty = 'medium';
 const selectedGame: GameType = GameType.SCHIEBEN; // Only one game now
 let highscoresData: Highscore[] = [];
 let scoreToSave = 0; // Temp score while waiting for name input
+let lastHenryQuotes: { [key: string]: string } = {};
 
 // --- KRUG-SCHIEBEN STATE ---
 const SHUFFLE_MAX_ROUNDS = 10;
@@ -37,17 +37,121 @@ let selectedPower = 0;
 // --- CONSTANTS ---
 const HIGHSCORE_STORAGE_KEY = 'henrysBierolympiadeHighscores';
 const henryQuotes = {
-  shuffleStart: ["Zeig mir, was du drauf hast! Ein ruhiges Händchen und ein gutes Auge!", "Das wird eine klare Sache für mich.", "Konzentration!"],
-  shuffleWin: ["Perfekt geschoben!", "Das ist die Technik eines Meisters!", "Ich hab's einfach im Gefühl."],
-  shuffleLose: ["Glück gehabt!", "Nicht schlecht, aber das kannst du nicht wiederholen!", "Unerhört! Mein Krug hatte einen Drall!"]
+  gameStart: [
+    "Zeig mir, was du drauf hast! Ein ruhiges Händchen und ein gutes Auge!", 
+    "Das wird eine klare Sache für mich.", 
+    "Konzentration! Der Krug will geführt werden.",
+    "Heute spendier' ich dir 'ne Lektion im Krug-Schieben!",
+    "Mal sehen, ob du mehr als nur heiße Luft zu bieten hast.",
+    "Na dann, auf geht's! Möge der Bessere... also ich... gewinnen!",
+    "Ich hab schon Krüge geschoben, da hast du noch in die Windeln gemacht!",
+    "Bist du bereit, eine Lektion in Präzision zu erhalten?",
+    "Der Krug wartet. Lass ihn nicht zu lange warten."
+  ],
+  playerGoodShot: [
+    "Glück gehabt!", 
+    "Nicht schlecht, aber das kannst du nicht wiederholen!", 
+    "Unerhört! Mein Krug hatte einen Drall!",
+    "Ein blindes Huhn findet auch mal ein Korn... oder einen Krug.",
+    "Anfängerglück! Das zählt nicht wirklich.",
+    "Zufall! Das war reiner Zufall!",
+    "Hast du etwa heimlich geübt?",
+    "Okay, der war nicht schlecht. Aber jetzt kommt mein Konter!",
+    "Moment mal... das war fast so gut wie meine Würfe.",
+    "Vorsicht, Hochmut kommt vor dem Fall!"
+  ],
+  playerBadShot: [
+      "Haha! War das alles?",
+      "Mein Zug! Ich zeig' dir, wie das geht.",
+      "Zu viel oder zu wenig Gefühl in den Händen?",
+      "Das war wohl nichts. Brauchst du Nachhilfe?",
+      "Schwacher Versuch. Jetzt kommt der Meister.",
+      "Zitterst du etwa? Haha!",
+      "Das war ja ein Schuss in den Ofen.",
+      "Soll ich dir mal zeigen, wie man das mit Gefühl macht?",
+      "Mehr Kraft! Oder weniger? Ach, egal, war eh nichts.",
+      "Vielleicht solltest du es mal mit Bowling versuchen."
+  ],
+  henryGoodShot: [
+    "Perfekt geschoben!", 
+    "Das ist die Technik eines Meisters!", 
+    "Ich hab's einfach im Gefühl.",
+    "Siehst du? So macht man das!",
+    "Lehrstunde beendet. Nächste Runde?",
+    "So schiebt der Meister! Lern was draus.",
+    "Wie auf Schienen! Einfach perfekt.",
+    "Das ist die Kunst des Krug-Schiebens.",
+    "Und wieder ein Volltreffer. Langsam wird's langweilig.",
+    "Ich bin in Topform heute!"
+  ],
+  henryBadShot: [
+      "Verdammt! Der Tisch ist schief!",
+      "Das war nur zum Aufwärmen.",
+      "Ich hab dich nur gewinnen lassen, um es spannend zu machen.",
+      "Hmpf. Konzentrationsfehler.",
+      "Gleich hab ich den Dreh wieder raus.",
+      "Uff... der Tisch hat 'ne Delle, eindeutig!",
+      "Ich wollte nur sehen, ob du aufpasst.",
+      "Der war nur gespielt schlecht, um dich in Sicherheit zu wiegen.",
+      "Der Krug ist heute aber auch rutschig.",
+      "Sogar meine schlechten Würfe sind noch elegant."
+  ],
+  roundEndHenryWins: [
+    "Wieder eine Runde für mich. Zu einfach!",
+    "Ich baue meinen Vorsprung aus!",
+    "Gib's auf, du hast keine Chance!",
+    "Und der Punkt geht an... MICH! Überraschung.",
+    "Siehst du? Erfahrung schlägt alles.",
+    "Du machst es mir echt zu einfach."
+  ],
+  roundEndPlayerWins: [
+    "Das war nur Glück, verlass dich nicht drauf!",
+    "Jetzt werd ich ernst machen!",
+    "Du forderst mich wirklich heraus... interessant.",
+    "Na schön, die Runde geb ich dir. Aber nur die!",
+    "Freu dich nicht zu früh, das Spiel ist noch lang.",
+    "Wie hast du das gemacht?! Schummelst du?"
+  ],
+  roundEndTie: [
+    "Unentschieden. Das lasse ich nicht auf mir sitzen!",
+    "Gleichstand... noch!",
+    "Wir sind auf Augenhöhe. Für den Moment.",
+    "Patt. Das ist ja fast wie verlieren für mich.",
+    "Noch bist du auf Augenhöhe. Betonung auf 'noch'.",
+    "Ein Unentschieden? Das akzeptiere ich nicht. Nächste Runde!"
+  ],
+  gameEndPlayerWins: [
+    "Das war pures Glück! Revanche! Sofort!",
+    "Du hast gewonnen? Das muss ein Fehler in der Matrix sein. Nächstes Mal nicht!",
+    "Glückwunsch... Anfänger. Das nächste Spiel geht an mich."
+  ],
+  gameEndHenryWins: [
+      "Haha! Gegen mich hast du keine Chance! War doch klar.",
+      "Sieg! Wie immer. Ein Prost auf mich!",
+      "Eine solide Leistung von dir, aber am Ende gewinnt immer der Meister."
+  ]
 };
 
+// --- Physics & AI Calibration ---
+// Rule 1: The target is centered at 65% of the table's length (100% - 35% top position in CSS).
+const TARGET_CENTER_PERCENTAGE = 0.65;
+// Rule 2: A power of 95% makes the mug travel 100% of the table's length (a foul).
+const FOUL_POWER = 95;
+// Rule 3: Use a non-linear power curve for a more natural feel.
+const PHYSICS_EXPONENT = 1.5;
+
+// Derived Sweet Spot: Calculate the exact power needed to hit the target center based on the rules above.
+const SWEET_SPOT_POWER = FOUL_POWER * Math.pow(TARGET_CENTER_PERCENTAGE, 1 / PHYSICS_EXPONENT);
+// This results in a sweet spot of ~72.04%
+
+// AI difficulty is now calibrated to the dynamically calculated SWEET_SPOT_POWER.
 const difficultySettings: any = {
-  easy:    { shufflePower: { min: 60, max: 80 }, shuffleAngleError: 15 },
-  medium:  { shufflePower: { min: 70, max: 90 }, shuffleAngleError: 10 },
-  hard:    { shufflePower: { min: 80, max: 98 }, shuffleAngleError: 6 },
-  extreme: { shufflePower: { min: 88, max: 102}, shuffleAngleError: 3 }
+  easy:    { shufflePower: { min: SWEET_SPOT_POWER - 10, max: SWEET_SPOT_POWER + 10 }, shuffleAngleError: 15 }, // 62-82
+  medium:  { shufflePower: { min: SWEET_SPOT_POWER - 7, max: SWEET_SPOT_POWER + 7 }, shuffleAngleError: 10 },   // 65-79
+  hard:    { shufflePower: { min: SWEET_SPOT_POWER - 4, max: SWEET_SPOT_POWER + 4 }, shuffleAngleError: 6 },    // 68-76
+  extreme: { shufflePower: { min: SWEET_SPOT_POWER - 1, max: SWEET_SPOT_POWER + 1 }, shuffleAngleError: 1.5 } // 71-73
 };
+
 
 // --- DOM ELEMENTS ---
 const menuScreen = document.getElementById('menuScreen');
@@ -65,6 +169,7 @@ function startGame(diff: string) {
   totalHenryScore = 0;
   currentRound = 1;
   gameActive = true;
+  lastHenryQuotes = {}; // Reset last quotes for a new game
   
   menuScreen?.classList.remove('active');
   startShuffleGame();
@@ -93,7 +198,7 @@ function endGame() {
     if (gameoverTitleEl) gameoverTitleEl.textContent = won ? '🏆 DU HAST GEWONNEN! 🏆' : '😢 HENRY GEWINNT! 😢';
     
     const finalQuoteEl = document.getElementById('finalQuote');
-    if(finalQuoteEl) finalQuoteEl.textContent = won ? "Das war pures Glück! Revanche!" : "Haha! Gegen mich hast du keine Chance!";
+    if(finalQuoteEl) finalQuoteEl.textContent = won ? getHenryQuote('gameEndPlayerWins') : getHenryQuote('gameEndHenryWins');
     
     document.getElementById('finalPlayerScore')!.textContent = `${totalPlayerScore}`;
     document.getElementById('finalHenryScore')!.textContent = `${totalHenryScore}`;
@@ -132,8 +237,7 @@ function startShuffleGame() {
     shuffleGameScreen?.classList.add('active');
     updateShuffleUI();
     
-    const quote = henryQuotes.shuffleStart[Math.floor(Math.random() * henryQuotes.shuffleStart.length)];
-    document.getElementById('shuffleHenryQuote')!.textContent = quote;
+    document.getElementById('shuffleHenryQuote')!.textContent = getHenryQuote('gameStart');
 
     setTimeout(startShuffleTurn, 1000);
 }
@@ -189,8 +293,8 @@ function handleShuffleAction() {
         // Position des Indikator-Zentrums relativ zum Meter-Zentrum (-0.5 bis 0.5)
         const relativePosition = ((indicatorRect.left + indicatorRect.width / 2) - (meterRect.left + meterRect.width / 2)) / meterRect.width;
         
-        // Mappt auf einen Winkel, z.B. -30 bis 30 Grad
-        const maxAngle = 30; 
+        // Mappt auf einen Winkel, z.B. -40 bis 40 Grad
+        const maxAngle = 40; 
         const angle = relativePosition * 2 * maxAngle;
         
         shuffleState = 'sliding';
@@ -209,9 +313,13 @@ function animateMugSlide(power: number, angle: number, user: 'player' | 'henry')
     mug.style.transition = 'transform 2s cubic-bezier(0.2, 0.8, 0.4, 1)';
     
     const tableHeight = table.offsetHeight;
-    const distance = (power / 100) * (tableHeight * 0.95);
-    const angleRad = angle * (Math.PI / 180);
+    
+    // The physics calculation is now derived from the constants defined at the top.
+    // This ensures that FOUL_POWER (95%) results in a distance of exactly tableHeight.
+    const distanceMultiplier = tableHeight / Math.pow(FOUL_POWER / 100, PHYSICS_EXPONENT);
+    const distance = Math.pow(power / 100, PHYSICS_EXPONENT) * distanceMultiplier;
 
+    const angleRad = angle * (Math.PI / 180);
     const finalX = distance * Math.sin(angleRad);
     const finalY = -distance * Math.cos(angleRad);
 
@@ -225,8 +333,17 @@ function animateMugSlide(power: number, angle: number, user: 'player' | 'henry')
         if (user === 'player') {
             playerScore = score;
             totalPlayerScore += score;
-            showScorePopup(mug, `+${score}`);
-            document.getElementById('shuffleHenryQuote')!.textContent = score >= 50 ? henryQuotes.shuffleLose[Math.floor(Math.random() * henryQuotes.shuffleLose.length)] : "Mein Zug!";
+            showScorePopup(`+${score}`);
+            
+            let playerTurnQuote = "";
+            if (score >= 50) {
+                playerTurnQuote = getHenryQuote('playerGoodShot');
+            } else if (score < 20) {
+                playerTurnQuote = getHenryQuote('playerBadShot');
+            } else {
+                playerTurnQuote = "Mein Zug! Mal sehen, ob ich das toppen kann.";
+            }
+            document.getElementById('shuffleHenryQuote')!.textContent = playerTurnQuote;
             
             turnIndicator.innerHTML = `<img src="./assets/henry.png" alt="Henry" class="turn-indicator-icon"> Henrys Zug`;
             turnIndicator.className = 'turn-indicator henry';
@@ -235,9 +352,18 @@ function animateMugSlide(power: number, angle: number, user: 'player' | 'henry')
         } else {
             henryScore = score;
             totalHenryScore += score;
-            showScorePopup(mug, `Henry +${score}`, true);
-            document.getElementById('shuffleHenryQuote')!.textContent = score >= 50 ? henryQuotes.shuffleWin[Math.floor(Math.random() * henryQuotes.shuffleWin.length)] : "Nächste Runde!";
-            setTimeout(endShuffleRound, 2000);
+            showScorePopup(`Henry +${score}`, true);
+
+            let henryTurnQuote = "";
+            if (score >= 50) {
+                henryTurnQuote = getHenryQuote('henryGoodShot');
+            } else if (score < 20) {
+                henryTurnQuote = getHenryQuote('henryBadShot');
+            } else {
+                henryTurnQuote = "Nicht perfekt, aber solide.";
+            }
+            document.getElementById('shuffleHenryQuote')!.textContent = henryTurnQuote;
+            setTimeout(endShuffleRound, 1500);
         }
         updateShuffleUI();
     }, 2200);
@@ -289,24 +415,34 @@ function henrySlide() {
     let henryPower: number;
     let henryAngle: number;
 
-    // Henry hat eine 80%ige Chance, sehr präzise zu spielen (entspricht "schwer")
-    if (Math.random() < 0.8) {
-        // "Profi"-Wurf: verwendet die Einstellungen für den Schwierigkeitsgrad "schwer"
-        const settings = difficultySettings['hard'];
-        const powerMin = settings.shufflePower.min;
-        const powerMax = settings.shufflePower.max;
-        henryPower = powerMin + Math.random() * (powerMax - powerMin);
+    // Henry's Skill Level: 9/10
+    // 90% chance for a "Meisterwurf"
+    // 10% chance for a "Profi-Wurf"
+    if (Math.random() < 0.9) {
+        // "Meisterwurf": Power between 63% and 68%.
+        henryPower = 63 + Math.random() * (68 - 63);
         
-        const angleError = settings.shuffleAngleError;
+        // Use 'extreme' angle for high precision.
+        const angleError = difficultySettings['extreme'].shuffleAngleError;
         henryAngle = (Math.random() - 0.5) * 2 * angleError;
     } else {
-        // "Normaler" Wurf: verwendet die Standardeinstellungen ("mittel")
-        const settings = difficultySettings['medium'];
-        const powerMin = settings.shufflePower.min;
-        const powerMax = settings.shufflePower.max;
-        henryPower = powerMin + Math.random() * (powerMax - powerMin);
-        
-        const angleError = settings.shuffleAngleError;
+        // "Profi-Wurf": Power is in one of two ranges: [50-62] or [69-80].
+        const range1_size = 62 - 50;
+        const range2_size = 80 - 69;
+        const totalRangeSize = range1_size + range2_size;
+
+        const randomPoint = Math.random() * totalRangeSize;
+
+        if (randomPoint < range1_size) {
+            // Point is in the first range
+            henryPower = 50 + randomPoint;
+        } else {
+            // Point is in the second range
+            henryPower = 69 + (randomPoint - range1_size);
+        }
+
+        // Use 'hard' angle for slightly less precision.
+        const angleError = difficultySettings['hard'].shuffleAngleError;
         henryAngle = (Math.random() - 0.5) * 2 * angleError;
     }
     
@@ -317,31 +453,59 @@ function henrySlide() {
 
 function endShuffleRound() {
     updateShuffleUI();
+    
+    let roundEndQuote = "";
+    if (henryScore > playerScore) {
+        roundEndQuote = getHenryQuote('roundEndHenryWins');
+    } else if (playerScore > henryScore) {
+        roundEndQuote = getHenryQuote('roundEndPlayerWins');
+    } else {
+        roundEndQuote = getHenryQuote('roundEndTie');
+    }
+    document.getElementById('shuffleHenryQuote')!.textContent = roundEndQuote;
+
     if (currentRound < SHUFFLE_MAX_ROUNDS) {
         currentRound++;
-        setTimeout(startShuffleTurn, 2000);
+        setTimeout(startShuffleTurn, 2000); // Increased delay to read quote
     } else {
-        setTimeout(() => endGame(), 2000);
+        setTimeout(() => endGame(), 2000); // Increased delay to read quote
     }
 }
 
 // --- UI HELPER FUNCTIONS ---
 
-function showScorePopup(element: HTMLElement, text: string, isHenry = false) {
+function showScorePopup(text: string, isHenry = false) {
   const popup = document.createElement('div');
   popup.className = 'score-popup';
   popup.textContent = text;
-  popup.style.color = isHenry ? '#e74c3c' : '#4CAF50';
+  popup.style.color = isHenry ? '#c0392b' : '#4CAF50';
   
-  const rect = element.getBoundingClientRect();
-  const containerRect = document.querySelector('.game-container')!.getBoundingClientRect();
+  const gameContainer = document.querySelector('.game-container');
+  if (!gameContainer) return;
   
-  popup.style.left = `${rect.left - containerRect.left + rect.width / 2}px`;
-  popup.style.top = `${rect.top - containerRect.top}px`;
-  
-  document.querySelector('.game-container')!.appendChild(popup);
-  setTimeout(() => popup.remove(), 1000);
+  gameContainer.appendChild(popup);
+  // Animation duration is 1.5s, so remove after that.
+  setTimeout(() => popup.remove(), 1500);
 }
+
+function getHenryQuote(category: keyof typeof henryQuotes): string {
+    const quotes = henryQuotes[category];
+    if (!quotes || quotes.length === 0) return "";
+
+    let newQuote = "";
+    // Try to get a different quote than the last one from this category
+    if (quotes.length > 1) {
+        do {
+            newQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        } while (newQuote === lastHenryQuotes[category]);
+    } else {
+        newQuote = quotes[0];
+    }
+    
+    lastHenryQuotes[category] = newQuote;
+    return newQuote;
+}
+
 
 // --- HIGHSCORE LOGIC ---
 function loadHighscores() {
@@ -366,7 +530,6 @@ function addHighscore(name: string, score: number) {
     name: name || 'Anonym',
     score,
     date: new Date().toLocaleDateString('de-DE'),
-    difficulty,
     game: selectedGame
   };
   highscoresData.push(newHighscore);
@@ -402,7 +565,6 @@ function displayHighscores() {
             <div class="highscore-header highscore-rank">#</div>
             <div class="highscore-header">Name</div>
             <div class="highscore-header">Punkte</div>
-            <div class="highscore-header">Modus</div>
             <div class="highscore-header">Datum</div>
     `;
 
@@ -420,7 +582,6 @@ function displayHighscores() {
                 <div class="highscore-score">${score.score}</div>
                 <!-- Wrapper for mobile layout -->
                 <div class="highscore-details-wrapper">
-                    <div class="highscore-difficulty">${score.difficulty}</div>
                     <div class="highscore-date">${score.date}</div>
                 </div>
             </div>

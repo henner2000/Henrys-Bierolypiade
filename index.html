@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Henrys Bierolympiade</title>
+  <title>Rauhbein's Tavernen-Spiele</title>
   <link rel="stylesheet" href="index.css">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -15,7 +15,7 @@
       <a href="https://www.rauhbein.de/" target="_blank" rel="noopener noreferrer">
         <img src="./assets/rauhbein_logo.png" alt="Rauhbein Logo" class="band-logo">
       </a>
-      <h1>Rauhbein's Bierolympiade</h1>
+      <h1>Rauhbein's Tavernen-Spiele</h1>
       <div class="character henry">
         <img src="./assets/henry.png" alt="Henry Rauhbein">
       </div>
@@ -57,10 +57,25 @@
             <div class="shuffle-table">
                 <div class="shuffle-mug">🍺</div>
                 <div class="target">
-                    <div class="ring r-100"><p>100</p></div>
-                    <div class="ring r-50"><p>50</p></div>
-                    <div class="ring r-20"><p>20</p></div>
-                    <div class="ring r-10"><p>10</p></div>
+                    <!-- Rings -->
+                    <div class="ring r-10"></div>
+                    <div class="ring r-20"></div>
+                    <div class="ring r-50"></div>
+                    <div class="ring r-100"></div>
+                    <!-- Scores -->
+                    <div class="score-container s-10">
+                        <p class="score-left">10</p>
+                        <p class="score-right">10</p>
+                    </div>
+                    <div class="score-container s-20">
+                        <p class="score-left">20</p>
+                        <p class="score-right">20</p>
+                    </div>
+                    <div class="score-container s-50">
+                        <p class="score-left">50</p>
+                        <p class="score-right">50</p>
+                    </div>
+                    <div class="score-container s-100"><p>100</p></div>
                 </div>
             </div>
         </div>
@@ -120,8 +135,9 @@
       <div id="newHighscore" style="display: none;">
         <h3>🏆 NEUER HIGHSCORE! 🏆</h3>
         <p style="margin: 5px 0 10px;">Trage deinen Namen für die Ruhmeshalle ein:</p>
+        <p class="giveaway-hint">Tipp: Gib deinen Instagram-Namen ein, um am Gewinnspiel teilzunehmen!</p>
         <div class="highscore-input-form">
-            <input type="text" id="playerNameInput" placeholder="Dein Name" maxlength="12">
+            <input type="text" id="playerNameInput" placeholder="Dein Instagram-Name" maxlength="30">
             <button id="saveHighscoreBtn">SPEICHERN</button>
         </div>
       </div>
@@ -134,7 +150,7 @@
 
     <!-- Highscore Screen -->
     <div class="highscore-screen" id="highscoreScreen">
-        <h1>🏆 Ruhmeshalle: Krug-Schieben 🏆</h1>
+        <h1>🏆 Ruhmeshalle: Bierkrug schieben 🏆</h1>
         <div class="highscore-table-container" id="highscoreTableContainer">
             <!-- Highscores will be injected here by JS -->
         </div>
