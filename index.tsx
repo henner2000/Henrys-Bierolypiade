@@ -345,7 +345,7 @@ function animateMugSlide(power: number, angle: number, user: 'player' | 'henry')
             }
             document.getElementById('shuffleHenryQuote')!.textContent = playerTurnQuote;
             
-            turnIndicator.innerHTML = `<img src="./assets/henry.png" alt="Henry" class="turn-indicator-icon"> Henrys Zug`;
+            turnIndicator.innerHTML = `<img src="assets/henry.png" alt="Henry" class="turn-indicator-icon"> Henrys Zug`;
             turnIndicator.className = 'turn-indicator henry';
             
             setTimeout(henrySlide, 2000);
