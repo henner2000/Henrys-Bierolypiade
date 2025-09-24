@@ -505,10 +505,8 @@ function endShuffleRound() {
     let roundEndQuote = "";
     if (henryScore > playerScore) {
         roundEndQuote = getHenryQuote('roundEndHenryWins');
-        playSound(loseSound);
     } else if (playerScore > henryScore) {
         roundEndQuote = getHenryQuote('roundEndPlayerWins');
-        playSound(winSound);
     } else {
         roundEndQuote = getHenryQuote('roundEndTie');
     }
@@ -644,8 +642,8 @@ function displayHighscores() {
 
 // --- EVENT LISTENERS ---
 function setupEventListeners() {
-    // Delegated listener for button clicks
-    document.body.addEventListener('click', (e) => {
+    // Delegated listener for immediate sound feedback on button press
+    document.body.addEventListener('mousedown', (e) => {
         startMusicIfNotPlaying();
         const targetButton = (e.target as HTMLElement).closest('button');
         if (targetButton && targetButton.id !== 'muteBtn') {
@@ -703,3 +701,4 @@ function setupEventListeners() {
 // --- INITIALIZATION ---
 loadHighscores();
 setupEventListeners();
+startMusicIfNotPlaying();
