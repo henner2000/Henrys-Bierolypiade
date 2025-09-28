@@ -598,6 +598,66 @@ button:disabled {
 .highscore-difficulty { text-transform: capitalize; }
 .highscore-date { font-size: 0.9em; color: #bdc3c7; }
 
+/* --- Firebase Status & Tooltips --- */
+#showHighscoresBtn {
+  position: relative;
+  padding-left: 35px; /* Make room for the status dot */
+}
+
+.firebase-status {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #f39c12; /* Yellow for connecting */
+  transition: background-color 0.5s;
+  box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+.firebase-status.connected {
+  background-color: #2ecc71; /* Green for connected */
+  box-shadow: 0 0 8px #2ecc71;
+}
+
+.firebase-status.error {
+  background-color: #e74c3c; /* Red for error */
+  box-shadow: 0 0 8px #e74c3c;
+}
+
+/* Tooltip for disabled button with data-tooltip attribute */
+button:disabled[data-tooltip] {
+  position: relative;
+  overflow: visible; /* Ensure tooltip is not clipped */
+}
+
+button:disabled[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 110%; /* Position above the button */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #e74c3c; /* Red background for error tooltip */
+  color: white;
+  padding: 6px 12px;
+  border-radius: 5px;
+  font-size: 0.85em;
+  font-family: 'Roboto', sans-serif;
+  text-transform: none; /* Override button uppercase */
+  letter-spacing: normal;
+  white-space: nowrap;
+  z-index: 1000;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  animation: fadeInTooltip 0.2s ease-out;
+}
+
+@keyframes fadeInTooltip {
+  from { opacity: 0; transform: translateX(-50%) translateY(5px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 
 /* Media Queries for smaller devices */
 @media (max-width: 600px) {

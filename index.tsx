@@ -3,6 +3,28 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
+// --- Fix: Declare firebase global to resolve 'Cannot find name firebase' errors.
+declare var firebase: any;
+
+// --- WICHTIG: Firebase Setup ---
+// 1. Erstelle ein Firebase-Projekt unter console.firebase.google.com
+// 2. Füge eine Web-App hinzu und kopiere das `firebaseConfig`-Objekt.
+// 3. Füge das Objekt hier ein.
+// --- Fix: Add type to firebaseConfig to allow access to optional properties like apiKey.
+const firebaseConfig = {
+  apiKey: "AIzaSyB4yvXpaauX3ef8ne3IUNZPkeVA-_782y8",
+  authDomain: "henrys-bierkrugschieben.firebaseapp.com",
+  projectId: "henrys-bierkrugschieben",
+  storageBucket: "henrys-bierkrugschieben.firebasestorage.app",
+  messagingSenderId: "722476104485",
+  appId: "1:722476104485:web:e2dbd6a68a3d0b30eb78cc",
+  measurementId: "G-RMB9DETH1B"
+};
+
+// Firebase will be initialized once the DOM is loaded
+let db: any;
+let highscoresCollection: any;
+
 // --- ENUMS AND TYPES ---
 enum GameType {
     SCHIEBEN = 'schieben'
@@ -14,6 +36,13 @@ type Highscore = {
     date: string;
     game: GameType;
 }
+
+type LoadResult = {
+    success: boolean;
+    errorMessage?: string;
+    tooltipMessage?: string;
+};
+
 
 // --- GLOBAL STATE ---
 let playerScore = 0;
@@ -37,7 +66,6 @@ let shuffleState: ShuffleState = 'done';
 let selectedPower = 0;
 
 // --- CONSTANTS ---
-const HIGHSCORE_STORAGE_KEY = 'henrysBierolympiadeHighscores';
 const henryQuotes = {
   gameStart: [
     "Zeig mir, was du drauf hast! Ein ruhiges Händchen und ein gutes Auge!", 
@@ -135,23 +163,15 @@ const henryQuotes = {
 };
 
 // --- Physics & AI Calibration ---
-// Rule 1: The target is centered at 65% of the table's length (100% - 35% top position in CSS).
 const TARGET_CENTER_PERCENTAGE = 0.65;
-// Rule 2: A power of 95% makes the mug travel 100% of the table's length (a foul).
 const FOUL_POWER = 95;
-// Rule 3: Use a non-linear power curve for a more natural feel.
 const PHYSICS_EXPONENT = 1.5;
-
-// Derived Sweet Spot: Calculate the exact power needed to hit the target center based on the rules above.
 const SWEET_SPOT_POWER = FOUL_POWER * Math.pow(TARGET_CENTER_PERCENTAGE, 1 / PHYSICS_EXPONENT);
-// This results in a sweet spot of ~72.04%
-
-// AI difficulty is now calibrated to the dynamically calculated SWEET_SPOT_POWER.
 const difficultySettings: any = {
-  easy:    { shufflePower: { min: SWEET_SPOT_POWER - 10, max: SWEET_SPOT_POWER + 10 }, shuffleAngleError: 15 }, // 62-82
-  medium:  { shufflePower: { min: SWEET_SPOT_POWER - 7, max: SWEET_SPOT_POWER + 7 }, shuffleAngleError: 10 },   // 65-79
-  hard:    { shufflePower: { min: SWEET_SPOT_POWER - 4, max: SWEET_SPOT_POWER + 4 }, shuffleAngleError: 6 },    // 68-76
-  extreme: { shufflePower: { min: SWEET_SPOT_POWER - 1, max: SWEET_SPOT_POWER + 1 }, shuffleAngleError: 1.5 } // 71-73
+  easy:    { shufflePower: { min: SWEET_SPOT_POWER - 10, max: SWEET_SPOT_POWER + 10 }, shuffleAngleError: 15 },
+  medium:  { shufflePower: { min: SWEET_SPOT_POWER - 7, max: SWEET_SPOT_POWER + 7 }, shuffleAngleError: 10 },
+  hard:    { shufflePower: { min: SWEET_SPOT_POWER - 4, max: SWEET_SPOT_POWER + 4 }, shuffleAngleError: 6 },
+  extreme: { shufflePower: { min: SWEET_SPOT_POWER - 1, max: SWEET_SPOT_POWER + 1 }, shuffleAngleError: 1.5 }
 };
 
 
@@ -162,6 +182,9 @@ const gameoverScreen = document.getElementById('gameoverScreen');
 const highscoreScreen = document.getElementById('highscoreScreen');
 const rulesScreen = document.getElementById('rulesScreen');
 const muteBtn = document.getElementById('muteBtn');
+const highscoresBtn = document.getElementById('showHighscoresBtn') as HTMLButtonElement;
+const firebaseStatusIndicator = document.getElementById('firebaseStatusIndicator');
+
 
 // --- SOUND ELEMENTS ---
 const clickSound = document.getElementById('clickSound') as HTMLAudioElement;
@@ -175,28 +198,24 @@ const allSounds: (HTMLAudioElement | null)[] = [clickSound, slideSound, scoreSou
 // --- SOUND LOGIC ---
 function playSound(sound: HTMLAudioElement | null) {
   if (isMuted || !sound) return;
-  // Resetting time allows the sound to be re-triggered before it's finished
   sound.currentTime = 0;
   sound.play().catch(error => {
-    // Autoplay is often blocked by browsers until the user interacts with the page.
     console.warn("Sound play was blocked by the browser:", error);
   });
 }
 
 function startMusicIfNotPlaying() {
     if (!isMusicStarted && backgroundMusic) {
-        backgroundMusic.volume = 0.2; // Set to a quiet volume
+        backgroundMusic.volume = 0.2;
         backgroundMusic.play().then(() => {
             isMusicStarted = true;
         }).catch(error => {
             console.warn("Background music autoplay was blocked:", error);
-            // We'll try again on the next interaction.
         });
     }
 }
 
 // --- GENERIC GAME LOGIC ---
-
 function startGame(diff: string) {
   difficulty = diff;
   playerScore = 0;
@@ -205,7 +224,7 @@ function startGame(diff: string) {
   totalHenryScore = 0;
   currentRound = 1;
   gameActive = true;
-  lastHenryQuotes = {}; // Reset last quotes for a new game
+  lastHenryQuotes = {};
   
   menuScreen?.classList.remove('active');
   startShuffleGame();
@@ -222,7 +241,7 @@ function backToMenu() {
   scoreToSave = 0;
 }
 
-function endGame() {
+async function endGame() {
     gameActive = false;
 
     shuffleGameScreen?.classList.remove('active');
@@ -265,7 +284,7 @@ function endGame() {
     nextRoundBtn.style.display = 'none';
     backToMenuBtn.style.display = 'none';
 
-    if (isNewHighscore(finalScore)) {
+    if (await isNewHighscore(finalScore)) {
         scoreToSave = finalScore;
         document.getElementById('newHighscore')!.style.display = 'block';
     } else {
@@ -275,7 +294,6 @@ function endGame() {
 
 
 // --- KRUG-SCHIEBEN LOGIC ---
-
 function startShuffleGame() {
     shuffleGameScreen?.classList.add('active');
     updateShuffleUI();
@@ -333,10 +351,8 @@ function handleShuffleAction() {
         const indicatorRect = angleIndicator.getBoundingClientRect();
         const meterRect = angleMeter.getBoundingClientRect();
         
-        // Position des Indikator-Zentrums relativ zum Meter-Zentrum (-0.5 bis 0.5)
         const relativePosition = ((indicatorRect.left + indicatorRect.width / 2) - (meterRect.left + meterRect.width / 2)) / meterRect.width;
         
-        // Mappt auf einen Winkel, z.B. -40 bis 40 Grad
         const maxAngle = 40; 
         const angle = relativePosition * 2 * maxAngle;
         
@@ -358,8 +374,6 @@ function animateMugSlide(power: number, angle: number, user: 'player' | 'henry')
     
     const tableHeight = table.offsetHeight;
     
-    // The physics calculation is now derived from the constants defined at the top.
-    // This ensures that FOUL_POWER (95%) results in a distance of exactly tableHeight.
     const distanceMultiplier = tableHeight / Math.pow(FOUL_POWER / 100, PHYSICS_EXPONENT);
     const distance = Math.pow(power / 100, PHYSICS_EXPONENT) * distanceMultiplier;
 
@@ -367,7 +381,6 @@ function animateMugSlide(power: number, angle: number, user: 'player' | 'henry')
     const finalX = distance * Math.sin(angleRad);
     const finalY = -distance * Math.cos(angleRad);
 
-    // Initial position is translateX(-50%). We add to that.
     mug.style.transform = `translateX(calc(-50% + ${finalX}px)) translateY(${finalY}px)`;
 
     setTimeout(() => {
@@ -430,7 +443,7 @@ function calculateShuffleScore(mug: HTMLElement, table: HTMLElement): number {
 
     if (mugCenterY < tableRect.top || mugCenterY > tableRect.bottom ||
         mugCenterX < tableRect.left || mugCenterX > tableRect.right) {
-        return 0; // Foul, off the table
+        return 0;
     }
 
     const targetCenterX = targetRect.left + targetRect.width / 2;
@@ -451,7 +464,7 @@ function calculateShuffleScore(mug: HTMLElement, table: HTMLElement): number {
     if (distance <= r20) return 20;
     if (distance <= r10) return 10;
     
-    return 0; // Missed target
+    return 0;
 }
 
 
@@ -463,18 +476,11 @@ function henrySlide() {
     let henryPower: number;
     let henryAngle: number;
 
-    // Henry's Skill Level: 9/10
-    // 90% chance for a "Meisterwurf"
-    // 10% chance for a "Profi-Wurf"
     if (Math.random() < 0.9) {
-        // "Meisterwurf": Power between 63% and 68%.
         henryPower = 63 + Math.random() * (68 - 63);
-        
-        // Use 'extreme' angle for high precision.
         const angleError = difficultySettings['extreme'].shuffleAngleError;
         henryAngle = (Math.random() - 0.5) * 2 * angleError;
     } else {
-        // "Profi-Wurf": Power is in one of two ranges: [50-62] or [69-80].
         const range1_size = 62 - 50;
         const range2_size = 80 - 69;
         const totalRangeSize = range1_size + range2_size;
@@ -482,14 +488,10 @@ function henrySlide() {
         const randomPoint = Math.random() * totalRangeSize;
 
         if (randomPoint < range1_size) {
-            // Point is in the first range
             henryPower = 50 + randomPoint;
         } else {
-            // Point is in the second range
             henryPower = 69 + (randomPoint - range1_size);
         }
-
-        // Use 'hard' angle for slightly less precision.
         const angleError = difficultySettings['hard'].shuffleAngleError;
         henryAngle = (Math.random() - 0.5) * 2 * angleError;
     }
@@ -514,14 +516,13 @@ function endShuffleRound() {
 
     if (currentRound < SHUFFLE_MAX_ROUNDS) {
         currentRound++;
-        setTimeout(startShuffleTurn, 2000); // Increased delay to read quote
+        setTimeout(startShuffleTurn, 2000);
     } else {
-        setTimeout(() => endGame(), 2000); // Increased delay to read quote
+        setTimeout(() => endGame(), 2000);
     }
 }
 
 // --- UI HELPER FUNCTIONS ---
-
 function showScorePopup(text: string, isHenry = false) {
   const popup = document.createElement('div');
   popup.className = 'score-popup';
@@ -532,7 +533,6 @@ function showScorePopup(text: string, isHenry = false) {
   if (!gameContainer) return;
   
   gameContainer.appendChild(popup);
-  // Animation duration is 1.5s, so remove after that.
   setTimeout(() => popup.remove(), 1500);
 }
 
@@ -541,7 +541,6 @@ function getHenryQuote(category: keyof typeof henryQuotes): string {
     if (!quotes || quotes.length === 0) return "";
 
     let newQuote = "";
-    // Try to get a different quote than the last one from this category
     if (quotes.length > 1) {
         do {
             newQuote = quotes[Math.floor(Math.random() * quotes.length)];
@@ -554,56 +553,105 @@ function getHenryQuote(category: keyof typeof henryQuotes): string {
     return newQuote;
 }
 
+function updateFirebaseStatusUI(status: 'connecting' | 'connected' | 'error', message?: string) {
+    if (!highscoresBtn || !firebaseStatusIndicator) return;
+
+    firebaseStatusIndicator.classList.remove('connected', 'error');
+
+    if (status === 'connected') {
+        firebaseStatusIndicator.classList.add('connected');
+        highscoresBtn.disabled = false;
+        highscoresBtn.removeAttribute('data-tooltip');
+    } else if (status === 'error') {
+        firebaseStatusIndicator.classList.add('error');
+        highscoresBtn.disabled = true;
+        highscoresBtn.setAttribute('data-tooltip', message || 'Verbindung zur Ruhmeshalle fehlgeschlagen.');
+    } else { // connecting
+        highscoresBtn.disabled = true;
+        highscoresBtn.setAttribute('data-tooltip', 'Verbinde mit Ruhmeshalle...');
+    }
+}
+
 
 // --- HIGHSCORE LOGIC ---
-function loadHighscores() {
-  const data = localStorage.getItem(HIGHSCORE_STORAGE_KEY);
-  highscoresData = data ? JSON.parse(data) : [];
-}
-
-function saveHighscores() {
-  localStorage.setItem(HIGHSCORE_STORAGE_KEY, JSON.stringify(highscoresData));
-}
-
-function isNewHighscore(score: number): boolean {
-  if (score === 0) return false;
-  const gameHighscores = highscoresData.filter(hs => hs.game === selectedGame);
-  if (gameHighscores.length < 10) return true;
-  const lowestHighscore = gameHighscores.sort((a, b) => a.score - b.score)[0];
-  return score > lowestHighscore.score;
-}
-
-function addHighscore(name: string, score: number) {
-  const newHighscore: Highscore = {
-    name: name || 'Anonym',
-    score,
-    date: new Date().toLocaleDateString('de-DE'),
-    game: selectedGame
-  };
-  highscoresData.push(newHighscore);
-  highscoresData.sort((a, b) => b.score - a.score);
-  
-  const gameHighscores = highscoresData.filter(hs => hs.game === selectedGame);
-    if (gameHighscores.length > 10) {
-        const scoreToRemove = gameHighscores[10].score;
-        const nameToRemove = gameHighscores[10].name;
-        // Find the actual entry in the main array to remove
-        const indexToRemove = highscoresData.findIndex(hs => hs.game === selectedGame && hs.score === scoreToRemove && hs.name === nameToRemove);
-        if (indexToRemove > -1) {
-            highscoresData.splice(indexToRemove, 1);
-        }
+async function loadHighscores(): Promise<LoadResult> {
+    if (!highscoresCollection) {
+        return { 
+            success: false, 
+            errorMessage: 'Firebase ist nicht richtig konfiguriert.',
+            tooltipMessage: 'Firebase-Konfigurationsfehler.'
+        };
     }
-    
-  saveHighscores();
+    try {
+        const querySnapshot = await highscoresCollection
+            .where('game', '==', selectedGame)
+            .orderBy('score', 'desc')
+            .limit(10)
+            .get();
+        
+        highscoresData = querySnapshot.docs.map(doc => doc.data() as Highscore);
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error loading highscores: ", error);
+        highscoresData = [];
+        
+        let detailedMessage = 'Verbindung zur Ruhmeshalle fehlgeschlagen.';
+        let tooltipMessage = 'Verbindung fehlgeschlagen.';
+
+        if (error.code === 'permission-denied') {
+            detailedMessage = 'Zugriff verweigert! <br>Bitte überprüfe die <strong>Sicherheitsregeln</strong> in deiner Firebase Firestore-Datenbank.';
+            tooltipMessage = 'Zugriff verweigert! Prüfe Firebase Regeln.';
+        } else if (error.code === 'unavailable' || (error.message && error.message.includes("Cloud Firestore backend"))) {
+            detailedMessage = 'Die Firestore-Datenbank konnte nicht erreicht werden. <br>Stelle sicher, dass du sie in der Firebase Konsole <strong>erstellt</strong> hast und deine <strong>Sicherheitsregeln</strong> den Zugriff erlauben.';
+            tooltipMessage = 'DB nicht erreichbar. Hast du sie in Firebase erstellt?';
+        }
+
+        return { success: false, errorMessage: detailedMessage, tooltipMessage: tooltipMessage };
+    }
 }
 
-function displayHighscores() {
+async function isNewHighscore(score: number): Promise<boolean> {
+    if (score === 0 || !highscoresCollection) return false;
+    // We check against the already loaded data, which is sufficient here.
+    if (highscoresData.length < 10) return true;
+    const lowestHighscore = highscoresData[highscoresData.length - 1];
+    return score > lowestHighscore.score;
+}
+
+async function addHighscore(name: string, score: number): Promise<void> {
+    if (!highscoresCollection) return;
+    const newHighscore: Highscore = {
+        name: name || 'Anonym',
+        score,
+        date: new Date().toLocaleDateString('de-DE'),
+        game: selectedGame
+    };
+
+    try {
+        await highscoresCollection.add(newHighscore);
+        // After adding, we can optionally clean up scores beyond the top 10,
+        // but it's better to do this with a server-side function for security.
+        // For now, we just add. The query will only show top 10.
+    } catch (error) {
+        console.error("Error adding highscore: ", error);
+    }
+}
+
+async function displayHighscores() {
     const container = document.getElementById('highscoreTableContainer');
     if (!container) return;
 
-    const filteredScores = highscoresData.filter(hs => hs.game === GameType.SCHIEBEN).sort((a, b) => b.score - a.score);
+    // Show loading state
+    container.innerHTML = '<p>Ruhmeshalle wird geladen...</p>';
+    
+    const result = await loadHighscores(); // Fetch latest scores
 
-    if (filteredScores.length === 0) {
+    if (!result.success) {
+        container.innerHTML = `<p style="color: #e74c3c; line-height: 1.5;">${result.errorMessage}</p>`;
+        return;
+    }
+
+    if (highscoresData.length === 0) {
         container.innerHTML = '<p>Noch keine Highscores. Sei der Erste!</p>';
         return;
     }
@@ -616,7 +664,7 @@ function displayHighscores() {
             <div class="highscore-header">Datum</div>
     `;
 
-    filteredScores.forEach((score, index) => {
+    highscoresData.forEach((score, index) => {
         const rank = index + 1;
         let rankDisplay = `${rank}`;
         if (rank === 1) rankDisplay = '🥇';
@@ -628,7 +676,6 @@ function displayHighscores() {
                 <div class="highscore-rank">${rankDisplay}</div>
                 <div class="highscore-name">${score.name}</div>
                 <div class="highscore-score">${score.score}</div>
-                <!-- Wrapper for mobile layout -->
                 <div class="highscore-details-wrapper">
                     <div class="highscore-date">${score.date}</div>
                 </div>
@@ -636,13 +683,12 @@ function displayHighscores() {
         `;
     });
 
-    html += '</div>'; // close table
+    html += '</div>';
     container.innerHTML = html;
 }
 
 // --- EVENT LISTENERS ---
 function setupEventListeners() {
-    // Delegated listener for immediate sound feedback on button press
     document.body.addEventListener('mousedown', (e) => {
         startMusicIfNotPlaying();
         const targetButton = (e.target as HTMLElement).closest('button');
@@ -659,7 +705,6 @@ function setupEventListeners() {
             if(sound) sound.muted = isMuted;
         });
 
-        // Feedback sound when unmuting.
         if (!isMuted) {
             playSound(clickSound);
         }
@@ -676,7 +721,7 @@ function setupEventListeners() {
     document.getElementById('showHighscoresBtn')?.addEventListener('click', () => {
         menuScreen?.classList.remove('active');
         highscoreScreen?.classList.add('active');
-        displayHighscores();
+        displayHighscores(); // This now fetches from Firebase
     });
 
     document.getElementById('showRulesBtn')?.addEventListener('click', () => {
@@ -687,18 +732,57 @@ function setupEventListeners() {
     document.getElementById('backToMenuFromHighscoresBtn')?.addEventListener('click', backToMenu);
     document.getElementById('backToMenuFromRulesBtn')?.addEventListener('click', backToMenu);
 
-    document.getElementById('saveHighscoreBtn')?.addEventListener('click', () => {
+    document.getElementById('saveHighscoreBtn')?.addEventListener('click', async (e) => {
+        const saveBtn = e.target as HTMLButtonElement;
         const name = (document.getElementById('playerNameInput') as HTMLInputElement).value;
         if (name.trim() && scoreToSave > 0) {
-            addHighscore(name, scoreToSave);
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'SPEICHERE...';
+            await addHighscore(name, scoreToSave);
             scoreToSave = 0;
             document.getElementById('newHighscore')!.style.display = 'none';
             document.getElementById('backToMenuBtn')!.style.display = 'inline-block';
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'SPEICHERN';
         }
     });
 }
 
 // --- INITIALIZATION ---
-loadHighscores();
-setupEventListeners();
-startMusicIfNotPlaying();
+async function main() {
+    setupEventListeners();
+    updateFirebaseStatusUI('connecting');
+
+    // Initialize Firebase
+    if (firebaseConfig.apiKey && firebaseConfig.projectId) {
+        try {
+            if (typeof firebase === 'undefined' || typeof firebase.initializeApp !== 'function') {
+                throw new Error("Firebase SDK not loaded correctly.");
+            }
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            highscoresCollection = db.collection('highscores');
+            console.log("Firebase initialized successfully.");
+
+            const result = await loadHighscores(); // Pre-load to check connection
+            if (result.success) {
+                updateFirebaseStatusUI('connected');
+            } else {
+                updateFirebaseStatusUI('error', result.tooltipMessage);
+            }
+        } catch (error: any) {
+            console.error("Firebase initialization failed. Highscores will be unavailable.", error);
+            db = null;
+            highscoresCollection = null;
+            updateFirebaseStatusUI('error', 'Firebase SDK konnte nicht initialisiert werden.');
+        }
+    } else {
+        console.warn("Firebase config is incomplete. Highscores will be unavailable.");
+        updateFirebaseStatusUI('error', 'Firebase Konfiguration ist unvollständig.');
+    }
+    
+    startMusicIfNotPlaying();
+}
+
+// Wait for the DOM to be fully loaded before running the app logic
+document.addEventListener('DOMContentLoaded', main);
