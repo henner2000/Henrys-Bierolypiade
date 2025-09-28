@@ -658,6 +658,51 @@ button:disabled[data-tooltip]:hover::after {
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+/* --- Error Troubleshooting --- */
+.error-container {
+    padding: 10px;
+    text-align: left;
+    line-height: 1.6;
+    color: #bdc3c7;
+    font-size: clamp(0.85em, 2.2svh, 0.95em);
+}
+.error-container h3 {
+    color: #e74c3c;
+    font-family: 'Cinzel Decorative', cursive;
+    text-align: center;
+    margin-bottom: 10px;
+}
+.error-container h4 {
+    margin-top: 15px;
+    border-bottom: 1px solid #7f8c8d;
+    padding-bottom: 5px;
+    font-family: 'Cinzel Decorative', cursive;
+}
+.troubleshooting-list {
+    list-style: none;
+    padding-left: 0;
+}
+.troubleshooting-list li {
+    margin-bottom: 12px;
+    padding-left: 10px;
+}
+.troubleshooting-list a {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: bold;
+}
+.troubleshooting-list a:hover {
+    text-decoration: underline;
+}
+#retryHighscoreLoadBtn {
+    display: block;
+    margin: 20px auto 0;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+#retryHighscoreLoadBtn:hover {
+    background: linear-gradient(135deg, #c0392b, #e74c3c);
+}
+
 
 /* Media Queries for smaller devices */
 @media (max-width: 600px) {

@@ -595,14 +595,14 @@ async function loadHighscores(): Promise<LoadResult> {
         console.error("Error loading highscores: ", error);
         highscoresData = [];
         
-        let detailedMessage = 'Verbindung zur Ruhmeshalle fehlgeschlagen.';
+        let detailedMessage = 'Ein unbekannter Fehler ist aufgetreten.';
         let tooltipMessage = 'Verbindung fehlgeschlagen.';
 
         if (error.code === 'permission-denied') {
-            detailedMessage = 'Zugriff verweigert! <br>Bitte überprüfe die <strong>Sicherheitsregeln</strong> in deiner Firebase Firestore-Datenbank.';
+            detailedMessage = 'Zugriff verweigert! Das ist ein Problem mit den <strong>Sicherheitsregeln</strong> in deiner Firebase Firestore-Datenbank.';
             tooltipMessage = 'Zugriff verweigert! Prüfe Firebase Regeln.';
         } else if (error.code === 'unavailable' || (error.message && error.message.includes("Cloud Firestore backend"))) {
-            detailedMessage = 'Die Firestore-Datenbank konnte nicht erreicht werden. <br>Stelle sicher, dass du sie in der Firebase Konsole <strong>erstellt</strong> hast und deine <strong>Sicherheitsregeln</strong> den Zugriff erlauben.';
+            detailedMessage = 'Keine Antwort vom Server. Dies passiert meistens, wenn die <strong>Firestore-Datenbank im Firebase-Projekt noch nicht erstellt wurde</strong>. Bitte überprüfe die Checkliste.';
             tooltipMessage = 'DB nicht erreichbar. Hast du sie in Firebase erstellt?';
         }
 
@@ -618,8 +618,11 @@ async function isNewHighscore(score: number): Promise<boolean> {
     return score > lowestHighscore.score;
 }
 
-async function addHighscore(name: string, score: number): Promise<void> {
-    if (!highscoresCollection) return;
+async function addHighscore(name: string, score: number): Promise<boolean> {
+    if (!highscoresCollection) {
+        alert("Fehler: Keine Verbindung zur Datenbank zum Speichern.");
+        return false;
+    }
     const newHighscore: Highscore = {
         name: name || 'Anonym',
         score,
@@ -629,11 +632,12 @@ async function addHighscore(name: string, score: number): Promise<void> {
 
     try {
         await highscoresCollection.add(newHighscore);
-        // After adding, we can optionally clean up scores beyond the top 10,
-        // but it's better to do this with a server-side function for security.
-        // For now, we just add. The query will only show top 10.
+        updateFirebaseStatusUI('connected'); // Connection is working!
+        return true;
     } catch (error) {
         console.error("Error adding highscore: ", error);
+        alert("Fehler beim Speichern des Highscores. Bitte überprüfe deine Internetverbindung und versuche es erneut.");
+        return false;
     }
 }
 
@@ -641,15 +645,30 @@ async function displayHighscores() {
     const container = document.getElementById('highscoreTableContainer');
     if (!container) return;
 
-    // Show loading state
     container.innerHTML = '<p>Ruhmeshalle wird geladen...</p>';
     
-    const result = await loadHighscores(); // Fetch latest scores
+    const result = await loadHighscores();
 
     if (!result.success) {
-        container.innerHTML = `<p style="color: #e74c3c; line-height: 1.5;">${result.errorMessage}</p>`;
+        updateFirebaseStatusUI('error', result.tooltipMessage);
+        container.innerHTML = `
+            <div class="error-container">
+                <h3><span style="font-size: 1.5em; vertical-align: middle;">🚨</span> Verbindung fehlgeschlagen</h3>
+                <p style="text-align: center; font-style: italic; color: #ecf0f1;">${result.errorMessage}</p>
+                <h4>Checkliste zur Fehlerbehebung:</h4>
+                <ol class="troubleshooting-list">
+                    <li><strong>1. Datenbank erstellt?</strong> Gehe zur <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer">Firebase Console</a>, wähle dein Projekt ('henrys-bierkrugschieben') &rarr; Build &rarr; Firestore Database. Klicke dort auf <strong>"Datenbank erstellen"</strong>.</li>
+                    <li><strong>2. Regeln im Testmodus?</strong> Wähle im Firestore den Tab <strong>"Regeln"</strong>. Der Code muss <code>allow read, write: if true;</code> enthalten, damit die App zugreifen kann.</li>
+                    <li><strong>3. Internet &amp; Ad-Blocker?</strong> Stelle sicher, dass du online bist und keine Browser-Erweiterungen die Verbindung zu Google blockieren.</li>
+                </ol>
+                <button id="retryHighscoreLoadBtn">Erneut versuchen</button>
+            </div>
+        `;
+        document.getElementById('retryHighscoreLoadBtn')?.addEventListener('click', displayHighscores);
         return;
     }
+
+    updateFirebaseStatusUI('connected');
 
     if (highscoresData.length === 0) {
         container.innerHTML = '<p>Noch keine Highscores. Sei der Erste!</p>';
@@ -721,7 +740,7 @@ function setupEventListeners() {
     document.getElementById('showHighscoresBtn')?.addEventListener('click', () => {
         menuScreen?.classList.remove('active');
         highscoreScreen?.classList.add('active');
-        displayHighscores(); // This now fetches from Firebase
+        displayHighscores();
     });
 
     document.getElementById('showRulesBtn')?.addEventListener('click', () => {
@@ -738,10 +757,12 @@ function setupEventListeners() {
         if (name.trim() && scoreToSave > 0) {
             saveBtn.disabled = true;
             saveBtn.textContent = 'SPEICHERE...';
-            await addHighscore(name, scoreToSave);
-            scoreToSave = 0;
-            document.getElementById('newHighscore')!.style.display = 'none';
-            document.getElementById('backToMenuBtn')!.style.display = 'inline-block';
+            const success = await addHighscore(name, scoreToSave);
+            if(success) {
+                scoreToSave = 0;
+                document.getElementById('newHighscore')!.style.display = 'none';
+                document.getElementById('backToMenuBtn')!.style.display = 'inline-block';
+            }
             saveBtn.disabled = false;
             saveBtn.textContent = 'SPEICHERN';
         }
